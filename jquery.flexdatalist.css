@@ -16,29 +16,18 @@
 }
 .flexdatalist-results li {
     border-bottom: 1px solid #ccc;
-    padding: 10px 15px;
+    padding: 0 15px;
+    font-size: 14px;
+    line-height: 35px;
 }
 .flexdatalist-results li span.highlight {
     font-weight: 700;
     text-decoration: underline;
 }
-.flexdatalist-results li span.item-category {
-    padding-left: 12px;
-    font-size: 80%;
-}
-.flexdatalist-results li .item-description {
-    font-size: 85%;
-    padding-left: 12px;
-    color: #777;
-}
 .flexdatalist-results li.active {
     background: #2B82C9;
     color: #fff;
     cursor: pointer;
-}
-.flexdatalist-results li.active,
-.flexdatalist-results li.active .item-description {
-    color: #fff;
 }
 
 /**
@@ -47,7 +36,7 @@
 .flexdatalist-results li.group {
     background: #F3F3F4;
     color: #666;
-    padding: 8px 8px;
+    padding: 0 8px;
 }
 .flexdatalist-results li .group-name {
     font-weight: 700;
