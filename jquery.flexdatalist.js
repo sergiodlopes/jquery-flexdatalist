@@ -16,15 +16,8 @@
  */
 (function($) {
     $.fn.flexdatalist = function(options) {
-        if (options === 'value') {
-            var $hiddenInput = $(this).next('input[type="hidden"]');
-            if ($hiddenInput.length > 0) {
-                return $hiddenInput.val();
-            }
-            return '';
-        }        
-        
-        var $document = $(document);
+        var $document = $(document),
+            _this = this;
         if (!$document.data('flexdatalist')) {
             // Remove items on click outside
             $(document).mouseup(function (event) {
@@ -51,29 +44,34 @@
                     $active.click();
                 // Up/Down key
                 } else if (keynum === 40 || keynum === 38) {
-                    var position = 0;
+                    event.preventDefault();
                     // Down key
                     if (keynum === 40) {
                         if (index < length && $active.nextAll('.item').first().length > 0) {
                             $active = $active.removeClass('active').nextAll('.item').first().addClass('active');
-                            position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
-                            $ul.animate({
-                                scrollTop: position + $ul.scrollTop()
-                            }, 100);
+                        } else {
+                            $active = $li.removeClass('active').filter('.item:first').addClass('active');
                         }
                     // Up key
                     } else if (keynum === 38) {
                         if (index > 0 && $active.prevAll('.item').first().length > 0) {
                             $active = $active.removeClass('active').prevAll('.item').first().addClass('active');
-                            position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
-                            $ul.animate({
-                                scrollTop: position + $ul.scrollTop()
-                            }, 100);
+                        } else {
+                            $active = $li.removeClass('active').filter('.item:last').addClass('active');
                         }
                     }
+                    _this._scrollTo($ul, $active);
                 }
             }).data('flexdatalist', true);
         }
+
+        this._scrollTo = function ($ul, $active) {
+            var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
+            $ul.animate({
+                scrollTop: position + $ul.scrollTop()
+            }, 100);
+        }
+
         return this.each(function() {
             var $this = $(this),
                 _cache = {},
@@ -93,52 +91,125 @@
                 mergeRemoteData: false,
                 groupBy: false,
                 selectionRequired: false,
-                focusFirstResult: true,
-                valueProperty: 'value',
-                sendProperty: 'value',
+                focusFirstResult: false,
+                textProperty: null,
+                valueProperty: null,
                 visibleProperties: [],
                 searchIn: ['label']
             }, options, $this.data());
-            
+
             options.searchIn = typeof options.searchIn === 'string' ? options.searchIn.split(',') : options.searchIn;
             options.visibleProperties = options.visibleProperties.length === 0 ? options.searchIn : options.visibleProperties;
+            options.multiple = $this.attr('multiple');
+
+            // Handle multiple values
+            if (options.multiple) {
+                _inputName += '[]';
+                var $ulMultiple = $('<ul>')
+                    .addClass('flexdatalist-multiple')
+                    .css({
+                        'background-color': $this.css("background-color"),
+                        'border-color': $this.css("border-left-color"),
+                        'border-width': $this.css("border-left-width"),
+                        'border-style': $this.css("border-left-style"),
+                        'border-radius': $this.css("border-top-left-radius")
+                    })
+                    .insertAfter($this);
+                $_this = $this.clone(true).attr('name', null);
+                $this.remove();
+                $this = $_this;
+                var $li = $('<li class="input-container">')
+                    .addClass('flexdatalist-multiple-value')
+                    .append($this)
+                    .appendTo($ulMultiple);
+            }
 
         /**
          * Initialize.
          */
             $this.init = function () {
+                // Set datalist data
+                $this.datalist();
                 // Listen to parent input key presses and state events.
                 $this.on('input keyup', function (event) {
-                    var keynum = event.keyCode || event.which;
-                    if (keynum === 13 || keynum === 38 || keynum === 40) {
+                    var val = $this.keyword();
+                    if ($this._ignoreKey(event)) {
                         return;
                     }
-                    var val = $this.keyword();
                     if (val.length >= options.minLength) {
                         $this.search();
                     } else {
                         $this.removeResults();
                     }
-                    if (!options.selectionRequired) {
-                        $this.value(val);
+                    if (!options.multiple) {
+                        if (!options.selectionRequired) {
+                            $this.value(val);
+                        } else if ($this.hiddenInput().length > 0 && !$this.selected()) {
+                            $this.value('');
+                        }
+                    }
+                }).on('input keydown', function (event) {
+                    if ($this._keyNum(event) === 188 && !options.selectionRequired && options.multiple) {
+                        event.preventDefault();
+                        $this.value($this.keyword());
                     }
                 }).blur(function () {
                     if (options.selectionRequired && !$this.selected()) {
-                        $this.val('').value('');
+                        $this.value('');
                     }
                 })
                 .attr('autocomplete', 'off')
                 .addClass('flexdatalist-set')
-                .trigger('init.flexdatalist', [options]);
+                .trigger('init:flexdatalist', [options]);
 
-                if (options.selectionRequired && !$this.selected()) {
-                    $this.val('').value('');
-                }
-                
                 window.onresize = function(event) {
                     $this.position();
                 };
-                $this.datalist();
+            }
+
+        /**
+         * Keyboard key code.
+         */
+            $this._setValue = function () {
+                var value = $this.keyword();
+                if (value === '') {
+                    return;
+                }
+                var value = $this._parseValue(value);
+                if (typeof value === 'object') {
+                    
+                } else {
+                    $this.value(value);
+                }
+            }
+
+        /**
+         * Keyboard key code.
+         */
+            $this._parseValue = function (data) {
+                if (typeof data === 'string') {
+                    try {
+                        return JSON.parse(data);
+                    } catch (e) {
+                        return data;
+                    }
+                }
+                return data;
+            }
+
+        /**
+         * Position results below parent element.
+         */
+            $this._keyNum = function (event) {
+                return event.which || event.keyCode;
+            }
+
+        /**
+         * Position results below parent element.
+         */
+            $this._ignoreKey = function (event) {
+                var keynum = $this._keyNum(event);
+                return keynum === 0 || keynum === 13 || keynum === 38 || keynum === 40;
             }
 
         /**
@@ -278,6 +349,7 @@
                         });
                     });
                 }
+                return $this;
             }
 
         /**
@@ -302,7 +374,7 @@
          */
             $this.results = function (data) {
                 $this.removeResults();
-                
+
                 if (data.length === 0 && Object.keys(data).length === 0) {
                     return;
                 }
@@ -318,7 +390,7 @@
                         var items = data[groupName],
                             property = options.groupBy,
                             groupText = $this.getHighlight(items[0], property, groupName);
-                        
+
                         var $li = $('<li>')
                                 .addClass('group')
                                 .append($('<span>')
@@ -338,7 +410,10 @@
                 var $li = $ul.find('li:not(.group)');
                 $li.on('click', function (event) {
                     var item = $(this).data('item');
-                    $this.selected(true).removeResults().value(item);
+                    if (item) {
+                        $this.selected(true).removeResults().value(item);
+                        $this.trigger('select:flexdatalist', [item, options]);
+                    }
                 }).hover(function() {
                     $li.removeClass('active');
                     $(this).addClass('active');
@@ -357,14 +432,20 @@
          * Get/create list container.
          */
             $this.getContainer = function () {
+                var $target = $this;
+                if (options.multiple) {
+                    $target = $ulMultiple;
+                }
                 var $container = $('ul.flexdatalist-results');
                 if ($container.length === 0) {
                     $container = $('<ul>')
                         .addClass('flexdatalist-results')
                         .appendTo('body')
                         .css({
-                            'border-color': $this.css("border-left-color"),
-                            'border-width': $this.css("border-left-width")
+                            'border-color': $target.css("border-left-color"),
+                            'border-width': '1px',
+                            'border-bottom-left-radius': $target.css("border-bottom-left-radius"),
+                            'border-bottom-right-radius': $target.css("border-bottom-right-radius")
                         });
                 }
                 return $container;
@@ -433,39 +514,6 @@
             }
 
         /**
-         * Set value on item selection.
-         */
-            $this.value = function (val) {               
-                var value = '',
-                    send = val;
-                    
-                if (typeof val === 'object') {
-                    value = val[options.searchIn[0]];
-                    if (typeof val[options.valueProperty] !== 'undefined') {
-                        value = val[options.valueProperty];
-                    }
-                    if (!options.sendProperty) {
-                        send = JSON.stringify(val);
-                    } else if ((options.sendProperty === options.valueProperty)) {
-                        send = value;
-                    } else if (typeof val[options.sendProperty] !== 'undefined') {
-                        send = val[options.sendProperty];
-                    }
-                    $this.trigger('select.flexdatalist', [send, value]).val(value);
-                }
-                value = value.trim();
-                $this.data('value', send).hiddenInput().val(send);
-                return $this;
-            }
-
-        /**
-         * Normalize string to a consistent one.
-         */
-            $this.normalizeString = function (string) {
-                return string.toUpperCase();
-            }
-
-        /**
          * Check if data was selected.
          */
             $this.selected = function (selected) {
@@ -476,12 +524,103 @@
                 selected ? $this.addClass(className) : $this.removeClass(className);
                 return $this;
             }
-            
+
         /**
-         * Check if data was selected.
+         * Set value on item selection.
          */
-            $this.multiple = function (selected) {
-                
+            $this.value = function (val) {
+                if (typeof val === 'undefined') {
+                    return $this.data('value');
+                }
+                var text = $this._text(val);
+                var value = $this._value(val);
+                if (options.multiple) {
+                    if (val === '') {
+                        return $this;
+                    }
+                    $this.val('');
+                    var $li = $('<li>')
+                        .addClass('value')
+                        .append('<span class="text">' + text + '</span>')
+                        .append('<span class="remove">&times;</span>')
+                        .insertBefore($ulMultiple.find('li.input-container'))
+
+                    $('<input type="hidden">').attr({
+                        'name': _inputName
+                    }).appendTo($li).val(value);
+
+                    $li.find('span.remove').click(function () {
+                        $(this).parent().remove();
+                    });
+                } else {
+                    text = text.trim();
+                    if (text.length > 0) {
+                        $this.val(text);
+                    }
+                    $this.hiddenInput().val(value);
+                }
+                $this.trigger('change:flexdatalist', [value, text, options]);
+                return $this.data('value', value);
+            }
+
+        /**
+         * Set value on item selection.
+         */
+            $this._text = function (item) {
+                var text = item;
+                if (typeof item === 'object') {
+                    text = item[options.searchIn[0]];
+                    if (typeof item[options.textProperty] !== 'undefined') {
+                        text = item[options.textProperty];
+                    } else {
+                        text = $this._placeholders(item, options.textProperty, text);
+                    }
+                }
+                return text;
+            }
+
+        /**
+         * Set value on item selection.
+         */
+            $this._value = function (item) {
+                var text = item;
+                if (typeof item === 'object') {
+                    text = item[options.searchIn[0]];
+                    if (options.valueProperty === '*') {
+                        text = JSON.stringify(item);
+                    } else if (typeof item[options.valueProperty] !== 'undefined') {
+                        text = item[options.valueProperty];
+                    } else {
+                        text = $this._placeholders(item, options.valueProperty, text);
+                    }
+                }
+                return text;
+            }
+
+        /**
+         * Set value on item selection.
+         */
+            $this._placeholders = function (item, pattern, value) {
+                if (typeof item === 'object' && typeof pattern === 'string') {
+                    var matches = pattern.match(/\{.+?\}/g);
+                    if (matches) {
+                        matches.map(function(string) {
+                            var property = string.slice(1, -1);
+                            if (typeof item[property] !== 'undefined') {
+                                pattern = pattern.replace(string, item[property]);
+                            }
+                        });
+                        return pattern;
+                    }
+                }
+                return value;
+            }
+
+        /**
+         * Normalize string to a consistent one.
+         */
+            $this.normalizeString = function (string) {
+                return string.toUpperCase();
             }
 
         /**
@@ -506,16 +645,20 @@
          * Position results below parent element.
          */
             $this.position = function () {
+                var $target = $this;
+                if (options.multiple) {
+                    $target = $ulMultiple;
+                }
                 // Set some required CSS propities
                 $('ul.flexdatalist-results').css({
-                    'width': $this.outerWidth() + 'px',
-                    'top': (($this.offset().top + $this.outerHeight())) + 'px',
-                    'left': $this.offset().left + 'px',
-                    'z-index': ($this.css('z-index') + 1)
+                    'width': $target.outerWidth() + 'px',
+                    'top': (($target.offset().top + $target.outerHeight())) + 'px',
+                    'left': $target.offset().left + 'px',
+                    'z-index': ($target.css('z-index') + 1)
                 });
             }
-
             $this.init();
+            $this._setValue();
         });
     }
     $('.flexdatalist').flexdatalist();

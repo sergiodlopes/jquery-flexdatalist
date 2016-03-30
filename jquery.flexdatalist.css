@@ -48,3 +48,53 @@
     padding-left: 10px;
 }
 
+
+/**
+ * Multiple items
+ */
+.flexdatalist-multiple {
+    width: 100%;
+    margin: 0;
+    padding: 0 0 0 10px;
+    list-style: none;
+    float: left;
+}
+.flexdatalist-multiple li {
+    float: left;
+    position: relative;
+    margin: 5px 5px 5px 0;
+    border-re
+}
+.flexdatalist-multiple li.input-container,
+.flexdatalist-multiple li.input-container input {
+    border: none;
+    width: 320px;
+}
+.flexdatalist-multiple li.input-container input {
+    height: auto;
+    padding: 0;
+    line-height: normal;
+    line-height: 25px;
+}
+.flexdatalist-multiple li.value {
+    display: inline-block;
+    padding: 2px 25px 2px 5px;
+    background: #efefef;
+    border-radius: 3px;
+}
+.flexdatalist-multiple li.value span {
+}
+.flexdatalist-multiple li.value span.remove {
+    font-weight: 700;
+    padding: 0 5px;
+    font-size: 20px;
+    line-height: 25px;
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0.70;
+}
+.flexdatalist-multiple li.value span.remove:hover {
+    opacity: 1;
+}
