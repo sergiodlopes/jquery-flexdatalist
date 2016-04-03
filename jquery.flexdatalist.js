@@ -161,7 +161,7 @@
                 .attr('autocomplete', 'off')
                 .addClass('flexdatalist-set')
                 .trigger('init:flexdatalist', [options]);
-
+                
                 window.onresize = function(event) {
                     $this.position();
                 };
@@ -175,9 +175,14 @@
                 if (value === '') {
                     return;
                 }
-                var value = $this._parseValue(value);
-                if (typeof value === 'object') {
-                    
+                if (options.multiple || options.valueProperty === '*') {
+                    var value = $this._parseValue(value);
+                    console.log(value);
+                    if (typeof value === 'object') {
+                        $this.value(value);
+                    } else {
+                        $this.val('');
+                    }
                 } else {
                     $this.value(value);
                 }
