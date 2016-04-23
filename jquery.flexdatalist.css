@@ -52,20 +52,16 @@
 /**
  * Multiple items
  */
-<<<<<<< HEAD
 .flexdatalist-multiple:before {
     content: '';
     display: block;
     clear: both;
 }
-=======
->>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
 .flexdatalist-multiple {
     width: 100%;
     margin: 0;
     padding: 0 0 0 10px;
     list-style: none;
-<<<<<<< HEAD
     text-align: left;
 }
 .flexdatalist-multiple:after {
@@ -78,15 +74,6 @@
     position: relative;
     margin: 5px 5px 5px 0;
     float: left;
-=======
-    float: left;
-}
-.flexdatalist-multiple li {
-    float: left;
-    position: relative;
-    margin: 5px 5px 5px 0;
-    border-re
->>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
 }
 .flexdatalist-multiple li.input-container,
 .flexdatalist-multiple li.input-container input {
