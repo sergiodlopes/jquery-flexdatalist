@@ -356,6 +356,25 @@ pre.prettyprint {
     outline: 0;
 }
 
+/** 
+ * <pre> and <code> customization style
+ */
+pre,
+pre.prettyprint {
+    border: none !important;
+    padding: 5px 10px !important;
+}
+
+.code-container h5 {
+    margin: 0 0 4px;
+    padding: 0;
+}
+.code-container .col-md-12 {
+    margin-bottom: 10px;
+}
+
+
+
 /**
  * Flexdatalist custom
  * style for properties text

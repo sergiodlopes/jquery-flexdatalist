@@ -71,7 +71,7 @@ $('input').each(function () {
     // Column 
     var $col = $row.find('> div');    
     $col.each(function () {
-        $(this).addClass('col-md-' + (12 / $col.length));
+        $(this).addClass('col-md-12');
     });
     
 });
@@ -120,10 +120,12 @@ $('a.toggle-code-visibility').on('click', function(event) {
     }
 });
 
-var val = $('.flexdatalist').on('select:flexdatalist', function() {
-    console.log('Selected!');
-}).on('change:flexdatalist', function(event, value) {
+var setValue = function(value) {
+    value = $(this).val();
     console.log('Changed to: ' + value);
     $(this).parent().find('.input-value span').html('<code>' + value + '</code>');
-});
+};
+var val = $('.flexdatalist').on('select:flexdatalist', function() {
+    console.log('Selected!');
+}).on('change:flexdatalist', setValue).on('init:flexdatalist', setValue);
 

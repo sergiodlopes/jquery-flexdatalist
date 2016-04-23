@@ -82,7 +82,7 @@
                                     type="text"
                                     placeholder="Write the name of a continent, country or capital"
                                     class="form-control flexdatalist"
-                                    data-file="countries.json"
+                                    data-data="countries.json"
                                     data-search-in='["name","continent","capital"]'
                                     data-visible-properties='["name", "continent", "capital", "capital_timezone"]'
                                     data-group-by="continent"
@@ -125,7 +125,7 @@
                                 <h4>Datalist</h4>
                                 <p>Using data from <code>&lt;datalist&gt;</code> as a suggestion (the standard behavior).</p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6 example-html">
                                 <input
                                     type="text"
                                     placeholder="Programming language name"
@@ -135,16 +135,16 @@
                                     name="language">
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
-
 
                     <div class="subsection">
                         <div class="row">
                             <div class="col-lg-12">
                                 <p>Multiple options from <code>&lt;datalist&gt;</code> (Use comma to separate values)</p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Programming language name"
@@ -156,16 +156,16 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
-
 
                     <div class="subsection">
                         <div class="row">
                             <div class="col-lg-12">
                                 <p>Force the selection of an option from <code>&lt;datalist&gt;</code></p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Programming language name"
@@ -178,6 +178,7 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
@@ -186,7 +187,7 @@
                             <div class="col-lg-12">
                                 <p>Multiple options from <code>&lt;datalist&gt;</code> (selection required)</p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Programming language name"
@@ -199,6 +200,7 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
@@ -216,18 +218,19 @@
                                     for country name in JSON.</small>
                                 </p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Write your country name"
                                     class="form-control flexdatalist"
-                                    data-file="countries.json"
+                                    data-data="countries.json"
                                     data-search-in='name'
                                     data-min-length="1"
                                     name="country_name_suggestion">
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
@@ -238,12 +241,12 @@
                                     Now with the option <code>selectionRequired</code> to <code>true</code>:
                                 </p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Write your country name"
                                     class="form-control flexdatalist"
-                                    data-file="countries.json"
+                                    data-data="countries.json"
                                     data-search-in='name'
                                     data-selection-required='true'
                                     data-min-length="1"
@@ -251,6 +254,7 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
@@ -263,12 +267,12 @@
                                     add to <code>visibleProperties</code> with <code>["name","capital","continent"]</code>.
                                 </p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Write your country name"
                                     class="form-control flexdatalist"
-                                    data-file="countries.json"
+                                    data-data="countries.json"
                                     data-search-in='name'
                                     data-visible-properties='["name","capital","continent"]'
                                     data-selection-required='true'
@@ -277,6 +281,7 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
@@ -284,15 +289,15 @@
                         <div class="row">
                             <div class="col-lg-12">
                                 <p>
-                                    But if we want to search the country name, but send its <code>id</code> on form submit? That's what <code>sendProperty</code> is for.
+                                    But if we want to search the country name, but send its <code>id</code> on form submit? That's what <code>valueProperty</code> is for.
                                 </p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Write your country name"
                                     class="form-control flexdatalist"
-                                    data-file="countries.json"
+                                    data-data="countries.json"
                                     data-search-in='name'
                                     data-visible-properties='["name","capital","continent"]'
                                     data-selection-required='true'
@@ -302,6 +307,7 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
@@ -312,12 +318,12 @@
                                     Or send all selected country's properties... just by setting <code>valueProperty</code> to <code>*</code>.
                                 </p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Write your country name"
                                     class="form-control flexdatalist"
-                                    data-file="countries.json"
+                                    data-data="countries.json"
                                     data-search-in='name'
                                     data-visible-properties='["name","capital","continent"]'
                                     data-selection-required='true'
@@ -327,6 +333,7 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
@@ -337,12 +344,12 @@
                                     Multiple values.
                                 </p>
                             </div>
-                            <div class="col-lg-12 example-html">
+                            <div class="col-lg-6">
                                 <input
                                     type="text"
                                     placeholder="Write your country name"
                                     class="form-control flexdatalist"
-                                    data-file="countries.json"
+                                    data-data="countries.json"
                                     data-search-in='name'
                                     data-visible-properties='["name","capital","continent"]'
                                     data-selection-required='true'
@@ -353,23 +360,23 @@
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
                         </div>
                     </div>
 
                 </section>
 
 
-                <!-- About Section -->
+                <!-- Installation Section -->
                 <section id="installation">
                     <div class="row">
                         <div class="col-lg-12 text-center">
                             <h2>How to install</h2>
-                            <p>The yellow highlight is only present on this demo's stylesheet.</p>
+                            <p></p>
                             <hr class="star-primary">
 
                         </div>
                     </div>
-                    <>
                         <div class="col-lg-12">
                             <h4>How to install</h4>
                             <p>Using data from <code>&lt;datalist&gt;</code></p>
