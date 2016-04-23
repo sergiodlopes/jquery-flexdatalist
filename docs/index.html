@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <title>Flexdatalist - jQuery autocomplete/datalist</title>
+
+        <!-- Bootstrap Core CSS - Uses Bootswatch Flatly Theme: http://bootswatch.com/flatly/ -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Custom Fonts -->
+        <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <link href="http://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+        <link href="http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+
+
+        <link href="../jquery.flexdatalist.css" rel="stylesheet" type="text/css">
+
+        <!-- Demo CSS -->
+        <link href="css/demo.css" rel="stylesheet">
+    </head>
+    <body id="page-top" class="index">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header page-scroll">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#page-top"><span class="jquery-name">jQuery</span><span class="plugin-name">flexdatalist</span></a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="hidden">
+                            <a href="#page-top"></a>
+                        </li>
+                        <li class="page-scroll">
+                            <a href="#examples">Examples</a>
+                        </li>
+                        <li class="page-scroll">
+                            <a href="#options">Options</a>
+                        </li>
+                        <li class="page-scroll">
+                            <a href="#events">Events</a>
+                        </li>
+                        <li class="page-scroll">
+                            <a href="#why">Why?</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container-fluid -->
+        </nav>
+
+        <!-- Header -->
+        <header>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="intro-text">
+                            <span class="jquery-name">jQuery</span><span class="plugin-name">flexdatalist</span>
+                            <p>Flexdatalist is (another) jQuery autocomplete/datalist plugin.</p>
+                            <hr class="star-light">
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <form>
+                            <div class="form-group">
+                                <input
+                                    type="text"
+                                    placeholder="Write the name of a continent, country or capital"
+                                    class="form-control flexdatalist"
+                                    data-file="countries.json"
+                                    data-search-in='["name","continent","capital"]'
+                                    data-visible-properties='["name", "continent", "capital", "capital_timezone"]'
+                                    data-group-by="continent"
+                                    data-selection-required="true"
+                                    data-focus-first-result="true"
+                                    data-min-length="1"
+                                    data-value-property="continent"
+                                    data-text-property="name"
+                                    data-search-contain="false"
+                                    name="countries">
+                                <p class="input-value"><small>On submit send selected country's continent...</small> <span></span></p>
+                            </div>
+                        </form>
+                        <a class="btn btn-primary"><i class="fa fa-download"></i> Download</a>
+                        <a class="btn btn-primary"><i class="fa fa-github"></i> Project source</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+
+
+        <!-- Sections -->
+        <div class="container">
+            <form>
+                <!-- Examples Section -->
+                <section id="examples" class="examples">
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <h2>Examples</h2>
+                            <p>The yellow highlight is only present on this demo's stylesheet.</p>
+                            <hr class="star-primary">
+
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <h4>Datalist</h4>
+                                <p>Using data from <code>&lt;datalist&gt;</code> as a suggestion (the standard behavior).</p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Programming language name"
+                                    class="form-control flexdatalist"
+                                    data-min-length="1"
+                                    list="languages"
+                                    name="language">
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>Multiple options from <code>&lt;datalist&gt;</code> (Use comma to separate values)</p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Programming language name"
+                                    class="form-control flexdatalist"
+                                    data-min-length="1"
+                                    multiple="multiple"
+                                    list="languages"
+                                    name="language12">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>Force the selection of an option from <code>&lt;datalist&gt;</code></p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Programming language name"
+                                    class="form-control flexdatalist"
+                                    data-min-length="1"
+                                    data-selection-required="1"
+                                    list="languages"
+                                    value="PHP"
+                                    name="language2">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>Multiple options from <code>&lt;datalist&gt;</code> (selection required)</p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Programming language name"
+                                    class="form-control flexdatalist"
+                                    data-min-length="1"
+                                    multiple
+                                    data-selection-required="1"
+                                    list="languages"
+                                    name="language22">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <h4>Data from remote file</h4>
+                                <p>
+                                    Load data from file <a target="_blank" href="countries.json"><code>countries.json</code></a>.
+                                </p>
+                                <p>
+                                    Like with <code>&lt;datalist&gt;</code> behavior, show the results as a suggestion.<br/>
+                                    <small>Please note in the HTML that in order to search for value(s) property(ies) in a JSON, we set the option <code>searchIn</code> to <code>'name'</code> that matches the property
+                                    for country name in JSON.</small>
+                                </p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-file="countries.json"
+                                    data-search-in='name'
+                                    data-min-length="1"
+                                    name="country_name_suggestion">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    Now with the option <code>selectionRequired</code> to <code>true</code>:
+                                </p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-file="countries.json"
+                                    data-search-in='name'
+                                    data-selection-required='true'
+                                    data-min-length="1"
+                                    name="country_name">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    Let's add some <code>visibleProperties</code> to results.<br>
+                                    Since we are searching for country's name, <code>'name'</code> is automatically an <code>visibleProperties</code>, but to add more, we simply
+                                    add to <code>visibleProperties</code> with <code>["name","capital","continent"]</code>.
+                                </p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-file="countries.json"
+                                    data-search-in='name'
+                                    data-visible-properties='["name","capital","continent"]'
+                                    data-selection-required='true'
+                                    data-min-length="1"
+                                    name="country_name_capital_continent">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    But if we want to search the country name, but send its <code>id</code> on form submit? That's what <code>sendProperty</code> is for.
+                                </p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-file="countries.json"
+                                    data-search-in='name'
+                                    data-visible-properties='["name","capital","continent"]'
+                                    data-selection-required='true'
+                                    data-value-property='id'
+                                    data-min-length="1"
+                                    name="country_id">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    Or send all selected country's properties... just by setting <code>valueProperty</code> to <code>*</code>.
+                                </p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-file="countries.json"
+                                    data-search-in='name'
+                                    data-visible-properties='["name","capital","continent"]'
+                                    data-selection-required='true'
+                                    data-value-property='*'
+                                    data-min-length="1"
+                                    name="country_id">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    Multiple values.
+                                </p>
+                            </div>
+                            <div class="col-lg-12 example-html">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-file="countries.json"
+                                    data-search-in='name'
+                                    data-visible-properties='["name","capital","continent"]'
+                                    data-selection-required='true'
+                                    data-value-property='*'
+                                    data-min-length="1"
+                                    multiple="multiple"
+                                    name="country_multiple_id">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">HTML <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-html"></code></pre>
+                            </div>
+                            <div class="col-lg-6">
+                                <h5 class="example-html">JavaScript <a href="#" class="toggle-code-visibility">Show</a></h5>
+                                <pre class="hidden prettyprint"><code class="language-js"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+
+                <!-- About Section -->
+                <section id="installation">
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <h2>How to install</h2>
+                            <p>The yellow highlight is only present on this demo's stylesheet.</p>
+                            <hr class="star-primary">
+
+                        </div>
+                    </div>
+                    <>
+                        <div class="col-lg-12">
+                            <h4>How to install</h4>
+                            <p>Using data from <code>&lt;datalist&gt;</code></p>
+                        </div>
+                        <div class="row">
+
+                        </div>
+                </section>
+
+<datalist id="languages">
+    <option value="PHP">PHP</option>
+    <option value="JavaScript">JavaScript</option>
+    <option value="Cobol">Cobol</option>
+    <option value="C#">C#</option>
+    <option value="C++">C++</option>
+    <option value="Java">Java</option>
+    <option value="Pascal">Pascal</option>
+    <option value="FORTRAN">FORTRAN</option>
+    <option value="Lisp">Lisp</option>
+    <option value="Swift">Swift</option>
+</datalist>
+                
+                
+            </form>
+        </div>
+        <!-- Scroll to Top Button (Only visible on small and extra-small screen sizes) -->
+        <div class="scroll-top page-scroll visible-xs visible-sm">
+            <a class="btn btn-primary" href="#page-top">
+                <i class="fa fa-chevron-up"></i>
+            </a>
+        </div>
+        <!-- jQuery -->
+        <script src="js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="js/bootstrap.min.js"></script>
+
+        <!-- Custom Theme JavaScript -->
+        <script src="js/demo.js"></script>
+
+        <!-- Flexdatalist -->
+        <script src="../jquery.flexdatalist.js"></script>
+        <script src="js/google-code-prettify/run_prettify.js"></script>
+        
+    </body>
+
+</html>

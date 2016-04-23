@@ -101,7 +101,7 @@
             options.searchIn = typeof options.searchIn === 'string' ? options.searchIn.split(',') : options.searchIn;
             options.visibleProperties = options.visibleProperties.length === 0 ? options.searchIn : options.visibleProperties;
             options.multiple = $this.attr('multiple');
-            
+
             // Handle multiple values
             if (options.multiple) {
                 var $ulMultiple = $('<ul>')
@@ -160,7 +160,7 @@
                 .attr('autocomplete', 'off')
                 .addClass('flexdatalist-set')
                 .trigger('init:flexdatalist', [options]);
-                
+
                 window.onresize = function(event) {
                     $this.position();
                 };
@@ -170,11 +170,11 @@
          * Set value on load.
          */
             $this._setValue = function () {
-                var value = $this.attr('value');                    
+                var value = $this.attr('value');
                 if (value === '') {
                     return;
                 }
-                
+
                 if (options.valueProperty === '*' || typeof options.valueProperty === 'object') {
                     var value = $this._parseValue(value);
                     if (typeof value === 'object' && Object.keys(value).length > 0) {
@@ -545,7 +545,7 @@
                 }
                 var text = $this._text(val);
                 var value = $this._value(val);
-                
+
                 if (options.multiple) {
                     if (val === '') {
                         return $this;
@@ -557,7 +557,7 @@
                         .append('<span class="remove">&times;</span>')
                         .insertBefore($ulMultiple.find('li.input-container')),
                         isJSON = typeof options.valueProperty === 'object' || options.valueProperty === '*';
-                    
+
                     if (isJSON) {
                        value = $this._inputValue(value);
                     } else {
@@ -619,7 +619,7 @@
                         var value = {},
                             properties = options.valueProperty,
                             textProperties = options.textProperty;
-                        
+
                         // Add placeholder properties to list
                         if (textProperties) {
                             var _properties = textProperties;
@@ -634,7 +634,7 @@
                         } else if (typeof item[textProperties] !== 'undefined') {
                             properties.push(textProperties);
                         }
-                        
+
                         $.each(properties, function (i, property) {
                             if (typeof item[property] !== 'undefined') {
                                 value[property] = item[property];
@@ -664,7 +664,7 @@
                     }
                     return $this.data('value') ? JSON.parse($this.data('value')) : [];
                 }
-                
+
                 if (typeof value === 'object') {
                     value = JSON.stringify(value);
                 }
@@ -675,7 +675,7 @@
                 $this.data('value', value);
                 return value;
             }
-            
+
         /**
          * Replace placeholders ('{property_name}') in text
          * with respective property value.
@@ -694,7 +694,7 @@
                 }
                 return value;
             }
-            
+
         /**
          * Extract placeholders property names.
          */
