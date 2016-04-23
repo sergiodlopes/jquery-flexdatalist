@@ -104,6 +104,10 @@
 
             // Handle multiple values
             if (options.multiple) {
+<<<<<<< HEAD
+=======
+                _inputName += '[]';
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                 var $ulMultiple = $('<ul>')
                     .addClass('flexdatalist-multiple')
                     .css({
@@ -160,13 +164,18 @@
                 .attr('autocomplete', 'off')
                 .addClass('flexdatalist-set')
                 .trigger('init:flexdatalist', [options]);
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                 window.onresize = function(event) {
                     $this.position();
                 };
             }
 
         /**
+<<<<<<< HEAD
          * Set value on load.
          */
             $this._setValue = function () {
@@ -185,6 +194,20 @@
                         } else {
                             $this.value(value);
                         }
+=======
+         * Keyboard key code.
+         */
+            $this._setValue = function () {
+                var value = $this.keyword();
+                if (value === '') {
+                    return;
+                }
+                if (options.multiple || options.valueProperty === '*') {
+                    var value = $this._parseValue(value);
+                    console.log(value);
+                    if (typeof value === 'object') {
+                        $this.value(value);
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                     } else {
                         $this.val('');
                     }
@@ -259,7 +282,11 @@
         /**
          * Match against searchable properties.
          */
+<<<<<<< HEAD
             $this.matches = function (data, keyword) {
+=======
+            $this.match = function (data, keyword) {
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                 var matches = false;
                 for (var si = 0; si < options.searchIn.length; si++) {
                     var searchProperty = options.searchIn[si];
@@ -513,8 +540,12 @@
          * Get input that holds data to be sent.
          */
             $this.hiddenInput = function () {
+<<<<<<< HEAD
                 var $form = $this.parents('form:eq(0)'),
                     $input = $form.find('input[type="hidden"][name="' + _inputName + '"]');
+=======
+                var $input = $('input[type="hidden"][name="' + _inputName + '"]');
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                 if ($input.length > 0) {
                     return $input;
                 }
@@ -545,7 +576,10 @@
                 }
                 var text = $this._text(val);
                 var value = $this._value(val);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                 if (options.multiple) {
                     if (val === '') {
                         return $this;
@@ -555,6 +589,7 @@
                         .addClass('value')
                         .append('<span class="text">' + text + '</span>')
                         .append('<span class="remove">&times;</span>')
+<<<<<<< HEAD
                         .insertBefore($ulMultiple.find('li.input-container')),
                         isJSON = typeof options.valueProperty === 'object' || options.valueProperty === '*';
 
@@ -576,12 +611,23 @@
                             $this._inputValue(currentValue);
                         }
                         $container.remove();
+=======
+                        .insertBefore($ulMultiple.find('li.input-container'))
+
+                    $('<input type="hidden">').attr({
+                        'name': _inputName
+                    }).appendTo($li).val(value);
+
+                    $li.find('span.remove').click(function () {
+                        $(this).parent().remove();
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                     });
                 } else {
                     text = text.trim();
                     if (text.length > 0) {
                         $this.val(text);
                     }
+<<<<<<< HEAD
                     value = $this._inputValue(value);
                 }
                 $this.trigger('change:flexdatalist', [value, text, options]);
@@ -590,6 +636,16 @@
 
         /**
          * Set text on item selection.
+=======
+                    $this.hiddenInput().val(value);
+                }
+                $this.trigger('change:flexdatalist', [value, text, options]);
+                return $this.data('value', value);
+            }
+
+        /**
+         * Set value on item selection.
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
          */
             $this._text = function (item) {
                 var text = item;
@@ -598,13 +654,18 @@
                     if (typeof item[options.textProperty] !== 'undefined') {
                         text = item[options.textProperty];
                     } else {
+<<<<<<< HEAD
                         text = $this._replacePlaceholders(item, options.textProperty, text);
+=======
+                        text = $this._placeholders(item, options.textProperty, text);
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
                     }
                 }
                 return text;
             }
 
         /**
+<<<<<<< HEAD
          * Get value to add.
          */
             $this._value = function (item) {
@@ -708,6 +769,42 @@
                     return properties;
                 }
                 return false;
+=======
+         * Set value on item selection.
+         */
+            $this._value = function (item) {
+                var text = item;
+                if (typeof item === 'object') {
+                    text = item[options.searchIn[0]];
+                    if (options.valueProperty === '*') {
+                        text = JSON.stringify(item);
+                    } else if (typeof item[options.valueProperty] !== 'undefined') {
+                        text = item[options.valueProperty];
+                    } else {
+                        text = $this._placeholders(item, options.valueProperty, text);
+                    }
+                }
+                return text;
+            }
+
+        /**
+         * Set value on item selection.
+         */
+            $this._placeholders = function (item, pattern, value) {
+                if (typeof item === 'object' && typeof pattern === 'string') {
+                    var matches = pattern.match(/\{.+?\}/g);
+                    if (matches) {
+                        matches.map(function(string) {
+                            var property = string.slice(1, -1);
+                            if (typeof item[property] !== 'undefined') {
+                                pattern = pattern.replace(string, item[property]);
+                            }
+                        });
+                        return pattern;
+                    }
+                }
+                return value;
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
             }
 
         /**
@@ -719,6 +816,7 @@
 
         /**
          * Get keyword with left trim.
+<<<<<<< HEAD
          */
             $this.keyword = function () {
                 return this.val().replace(/^\s+/,"");
@@ -738,6 +836,27 @@
         /**
          * Position results below parent element.
          */
+=======
+         */
+            $this.keyword = function () {
+                return this.val().replace(/^\s+/,"");
+            }
+
+        /**
+         * Check if highlighted property value exists,
+         * if true, return it, if not, fallback to given string
+         */
+            $this.getHighlight = function (item, property, fallback) {
+                if (typeof item[property + '_highlight'] !== 'undefined') {
+                    return item[property + '_highlight'];
+                }
+                return (item[property] !== 'undefined' ? item[property] : fallback);
+            }
+
+        /**
+         * Position results below parent element.
+         */
+>>>>>>> 0c63a0643a111bfd5285c40f2aef208324cb2215
             $this.position = function () {
                 var $target = $this;
                 if (options.multiple) {
