@@ -5,4 +5,4 @@ Another autocomplete jQuery plugin. jQuery.Flexdatalist supports <code>datalist<
 
 ## Examples and Documentation ##
 
-Check out the [examples and documentation page](http://projects.sergiodinislopes.pt/flexdatalist/docs/).
+Check out the [examples and documentation page](http://projects.sergiodinislopes.pt/flexdatalist/).

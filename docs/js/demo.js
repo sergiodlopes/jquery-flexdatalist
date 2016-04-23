@@ -4,43 +4,52 @@
  * For details, see http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-jQuery.fn.outerHTML = function(s) {
+jQuery.fn.outerHTML = function (s) {
     return s
         ? this.before(s).remove()
         : jQuery("<p>").append(this.eq(0).clone()).html();
 };
-
-function htmlEncode(value){
-    //create a in-memory div, set it's inner text(which jQuery automatically encodes)
-    //then grab the encoded contents back out.  The div never exists on the page.
+var htmlEncode = function(value) {
     return $('<div/>').text(value).html();
 }
 
+var $codeContainer = function ($parent, languageText, languageCode) {
+    var $container = $('<div>').appendTo($parent),
+        $h5 = $('<h5>')
+            .text(languageText + ' ')
+            .append(
+                $('<a>').addClass('toggle-code-visibility').attr('href', '#').text('Show')
+            ).appendTo($container),
+        $pre = $('<pre>').addClass('hidden prettyprint').appendTo($container),
+        $code = $('<code>').addClass('language-' + languageCode).appendTo($pre);
+    return $code;
+};
+
 $('input').each(function () {
-    var value = $(this).outerHTML().trim(),
-        $codeContainer = $(this).parents('.row:eq(0)'),
-        $htmlContainer = $codeContainer.find('.language-html'),
-        $jsContainer = $codeContainer.find('.language-js');
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    var $this = $(this),
+        value = $this.outerHTML().trim(),
+        $exampleWrapper = $this.parents('.subsection:eq(0)'),
+        $row = $exampleWrapper.find('.row.code-container');
+        
+    if ($row.length === 0) {
+        $row = $('<div>').addClass('row code-container').appendTo($exampleWrapper);
+    }
+   
+    // Get HTML code
     htmlCode = htmlEncode(value)
         .replace(/"\s/g, '"' + "\n       ")
         .replace(/"/g, "'")
+        .replace('form-control ', '')
         .split('&amp;quot;').join('"');
-    // List
-    if ($(this).attr('list')) {
-        var listHtml = $('#' + $(this).attr('list')).outerHTML().trim();
-        htmlCode += "\n\n" + htmlEncode(listHtml);
-    }    
-    $htmlContainer.html(htmlCode);
     
+    // Get datalist HTML
+    if ($this.attr('list')) {
+        var listHtml = $('#' + $this.attr('list')).outerHTML().trim();
+        htmlCode += "\n\n" + htmlEncode(listHtml);
+    }
+    $codeContainer($row, 'HTML', 'html').html(htmlCode);
+    
+    // Generate Javascript example code
     var javascript = "$('.flexdatalist').flexdatalist({";
     var data = $(this).data();
     var i = 0;
@@ -56,9 +65,15 @@ $('input').each(function () {
         javascript += "\n     " + option + ": " + value;
         i++;
     });    
-    javascript += "\n});";
+    javascript += "\n});";    
+    $codeContainer($row, 'JavaScript', 'js').html(javascript);
     
-    $jsContainer.html(javascript);
+    // Column 
+    var $col = $row.find('> div');    
+    $col.each(function () {
+        $(this).addClass('col-md-' + (12 / $col.length));
+    });
+    
 });
 
 // jQuery for page scrolling feature - requires jQuery Easing plugin
