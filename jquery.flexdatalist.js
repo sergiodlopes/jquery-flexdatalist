@@ -1,18 +1,15 @@
 /**
- * jQuery FlexDatalist.
- * Autocomplete alike to input fields.
+ * jQuery Flexdatalist.
+ * Autocomplete alike to input fields with support for datalists.
  *
  * Depends:
  * jquery.js 1.7+
  *
- * Documentation:
- * http://projects.sergiodinislopes.pt/jquery.flexdatalist/
- *
- * Demo:
- * http://projects.sergiodinislopes.pt/jquery.flexdatalist/example/
+ * Demo and Documentation:
+ * http://projects.sergiodinislopes.pt/flexdatalist/
  *
  * Github:
- * https://github.com/sergiodlopes/jquery.flexdatalist/
+ * https://github.com/sergiodlopes/jquery-flexdatalist/
  */
 (function($) {
     $.fn.flexdatalist = function(options) {
@@ -532,13 +529,13 @@
                     if (property === 'thumb') {
                         // Thumbnail image
                         $item = $('<img>')
-                            .addClass('item-' + property)
+                            .addClass('item item-' + property)
                             .attr('src', item[property]);
                     } else {
                         var propertyText = $this._getHighlight(item, property);
                         // Other text properties
                         $item = $('<span>')
-                            .addClass('item-' + property)
+                            .addClass('item item-' + property)
                             .html(propertyText + ' ');
                     }
                     $item.appendTo($li);
@@ -611,14 +608,14 @@
                         $_this.val(text);
                     }
                 }
-                $this._inputValue(value);
+                $this._inputValue(value, text);
                 return $this;
             }
 
         /**
          * Get/Set input value.
          */
-            $this._inputValue = function (value) {
+            $this._inputValue = function (value, text) {
                 var isJSON = $this._toJSON(),
                     isCSV = $this._toCSV();
 
@@ -644,7 +641,7 @@
                     }
                 }
                 $this.val(value);
-                $this.trigger('change:flexdatalist', [value, options]);
+                $this.trigger('change:flexdatalist', [value, text, options]);
                 return value;
             }
 

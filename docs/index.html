@@ -18,7 +18,7 @@
         <link href="http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
 
 
-        <link href="../jquery.flexdatalist.css" rel="stylesheet" type="text/css">
+        <link href="src/jquery.flexdatalist.css" rel="stylesheet" type="text/css">
 
         <!-- Demo CSS -->
         <link href="css/demo.css" rel="stylesheet">
@@ -49,6 +49,9 @@
                             <a href="#examples">Examples</a>
                         </li>
                         <li class="page-scroll">
+                            <a href="#installation">Installation</a>
+                        </li>
+                        <li class="page-scroll">
                             <a href="#options">Options</a>
                         </li>
                         <li class="page-scroll">
@@ -71,7 +74,7 @@
                     <div class="col-lg-12">
                         <div class="intro-text">
                             <span class="jquery-name">jQuery</span><span class="plugin-name">flexdatalist</span>
-                            <p>Flexdatalist is (another) jQuery autocomplete/datalist plugin.</p>
+                            <p>Flexdatalist is (another) jQuery autocomplete plugin with support for <code>&lt;datalist&gt;</code>.</p>
                             <hr class="star-light">
                         </div>
                     </div>
@@ -96,14 +99,12 @@
                                 <p class="input-value"><small>On submit send selected country's continent...</small> <span></span></p>
                             </div>
                         </form>
-                        <a class="btn btn-primary"><i class="fa fa-download"></i> Download</a>
-                        <a class="btn btn-primary"><i class="fa fa-github"></i> Project source</a>
+                        <a class="btn btn-primary"><i class="fa fa-download"></i> Download v1.0.0</a>
+                        <a class="btn btn-primary" href="https://github.com/sergiodlopes/jquery-flexdatalist"><i class="fa fa-github"></i> Project source</a>
                     </div>
                 </div>
             </div>
         </header>
-
-
 
         <!-- Sections -->
         <div class="container">
@@ -315,6 +316,60 @@
                         <div class="row">
                             <div class="col-lg-12">
                                 <p>
+                                    Let's continue to send the selected <code>id</code> but changing <code>textProperty</code> to <code>{capital}, {name}, {continent}</code>.
+                                </p>
+                            </div>
+                            <div class="col-lg-6">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-data="countries.json"
+                                    data-search-in='name'
+                                    data-visible-properties='["name","capital","continent"]'
+                                    data-selection-required='true'
+                                    data-value-property='id',
+                                    data-text-property="{capital}, {name}, {continent}"
+                                    data-min-length="1"
+                                    name="country_id">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    And <code>valueProperty</code> like  <code>{capital}, {name}, {continent}</code>.
+                                </p>
+                            </div>
+                            <div class="col-lg-6">
+                                <input
+                                    type="text"
+                                    placeholder="Write your country name"
+                                    class="form-control flexdatalist"
+                                    data-data="countries.json"
+                                    data-search-in='name'
+                                    data-visible-properties='["name","capital","continent"]'
+                                    data-selection-required='true'
+                                    data-value-property='{capital}, {name}, {continent}',
+                                    data-text-property="{capital}, {name}, {continent}"
+                                    data-min-length="1"
+                                    name="country_id">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
                                     Or send all selected country's properties... just by setting <code>valueProperty</code> to <code>*</code>.
                                 </p>
                             </div>
@@ -330,6 +385,36 @@
                                     data-value-property='*'
                                     data-min-length="1"
                                     name="country_id">
+
+                                <p class="input-value text-muted"><small>Value</small> <span></span></p>
+                            </div>
+                            <div class="col-lg-6"><div class="row code-container"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    Let's group results by <code>continent</code> using option <code>groupBy</code> and set <code>iso2</code> (country code) as <code>valueProperty</code>:
+                                </p>
+                            </div>
+                            <div class="col-lg-6">
+                                <input
+                                    type="text"
+                                    placeholder="Write the name of a continent, country or capital"
+                                    class="form-control flexdatalist"
+                                    data-data="countries.json"
+                                    data-search-in='["name","continent","capital"]'
+                                    data-visible-properties='["name", "continent", "capital", "capital_timezone"]'
+                                    data-group-by="continent"
+                                    data-selection-required="true"
+                                    data-focus-first-result="true"
+                                    data-min-length="1"
+                                    data-value-property="iso2"
+                                    data-text-property="{capital}, {name}, {continent}"
+                                    data-search-contain="false"
+                                    name="countries">
 
                                 <p class="input-value text-muted"><small>Value</small> <span></span></p>
                             </div>
@@ -366,15 +451,26 @@
 
                 </section>
 
-
                 <!-- Installation Section -->
                 <section id="installation">
-                    <div class="row">
-                        <div class="col-lg-12 text-center">
+                    <div class="row text-center">
+                        <div class="col-lg-12">
                             <h2>How to install</h2>
-                            <p></p>
+                            <p><a href="#">Download the plugin's</a> latest version from Github repository.</p>
                             <hr class="star-primary">
 
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <p>Include the CSS file <code>jquery.flexdatalist.min.css</code></p>
+                            <pre class="prettyprint"><code class="language-html">&lt;link href="/path/to/jquery.flexdatalist.min.css" rel="stylesheet" type="text/css"&gt;</code></pre>
+                            <br>
+                            <p>Include the JS file <code>jquery.flexdatalist.min.js</code></p>
+                            <pre class="prettyprint"><code class="language-html">&lt;script src="/path/to/jquery.flexdatalist.min.js"&gt;&lt;/script&gt;</code></pre>
+                            <br>
+                            <br>
+                            <p>By default the plugin searches for an <code>&lt;input class="flexdatalist" ...&gt;</code></p>
+                            <pre class="prettyprint"><code class="language-html">&lt;input type="text" class="flexdatalist" &gt;</code></pre>
                         </div>
                     </div>
                 </section>
@@ -388,133 +484,213 @@
                             <hr class="star-primary">
                         </div>
                         <div class="col-md-12">
-                            <table class="table table-striped table-hover text-left">
-                                <thead>
-                                    <tr>
-                                        <th>Option</th>
-                                        <th>Type</th>
-                                        <th>Default</th>
-                                        <th class="text-left">Example</th>
-                                        <th class="text-left" width="60%">Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>data</td>
-                                        <td>string|object</td>
-                                        <td>null</td>
-                                        <td class="text-left">[{name: "John Doe"},{name: "Joan Doe"},...]</td>
-                                        <td class="text-left">
-                                            Data source. Array of items or a URL to JSON string/file.
-                                            <p><small>NOTE: If using a URL, it will load the data once.</small></p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>url</td>
-                                        <td>string</td>
-                                        <td>null</td>
-                                        <td class="text-left">http://example.com/some-url</td>
-                                        <td class="text-left">
-                                            URL to remote data source. This is useful when data is just too big to pass to <code>data</code> option.
-                                            The POST request will send parameters:
-                                            <ul>
-                                                <li><code>keyword</code>: The current input keyword</li>
-                                                <li><code>contain</code>: The <code>searchContain</code> option value</li>
-                                            </ul>
-                                            <small>NOTE: It will keep requesting the server for data whenever is appropriate. If possible, filter also on the server side to improve performance.</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>searchContain</td>
-                                        <td>boolean</td>
-                                        <td>false</td>
-                                        <td class="text-left">true</td>
-                                        <td class="text-left">
-                                            By default, Flexdatalist's search matches starting at the beginning of a word.
-                                            Setting this option to true allows matches starting from anywhere within a word.
-                                            This is especially useful for options that include a lot of special characters or phrases in ()s and []s.
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>minLength</td>
-                                        <td>integer</td>
-                                        <td>2</td>
-                                        <td class="text-left"></td>
-                                        <td class="text-left">
-                                            Search if there are n or greater characters.
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>groupBy</td>
-                                        <td>boolean</td>
-                                        <td>false</td>
-                                        <td class="text-left">'continent'</td>
-                                        <td class="text-left">
-                                            Group results by property value.
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>selectionRequired</td>
-                                        <td>boolean</td>
-                                        <td>false</td>
-                                        <td class="text-left"></td>
-                                        <td class="text-left">
-                                            Selection from search results is required.
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>focusFirstResult</td>
-                                        <td>boolean</td>
-                                        <td>false</td>
-                                        <td class="text-left"></td>
-                                        <td class="text-left">
-                                            Select first result.
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>searchIn</td>
-                                        <td>string|object/array</td>
-                                        <td>["label"]</td>
-                                        <td class="text-left">["value"]</td>
-                                        <td class="text-left">
-                                            Name of property (or properties) where it will search.                                             
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>visibleProperties</td>
-                                        <td>object/array</td>
-                                        <td>[]</td>
-                                        <td class="text-left">["name","continent","capital"]</td>
-                                        <td class="text-left">
-                                            <p>Name of properties values that will appear with the search result.</p>
-                                            <p>Each property value will be wrapped with a <code>&lt;span class="item-property_name"&gt;Property Value&lt;/span&gt;</code> so that its possible to style the appearance of additional information in the results.</p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>textProperty</td>
-                                        <td>string</td>
-                                        <td>null</td>
-                                        <td class="text-left">{name}, {capital}</td>
-                                        <td class="text-left">
-                                            <p>The text that will be visible to the user</p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>valueProperty</td>
-                                        <td>string|object/array</td>
-                                        <td>null</td>
-                                        <td class="text-left"><code>id</code></td>
-                                        <td class="text-left">
-                                            <p>The property name that when selected its value will be sent with the form.</p>
-                                            <p>If you wanna send properties from selected item, set this option to <code>*</code></p>
-                                        </td>
-                                    </tr>
-                                    
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover text-left">
+                                    <thead>
+                                        <tr>
+                                            <th>Option</th>
+                                            <th>Type</th>
+                                            <th>Default</th>
+                                            <th class="text-left" width="60%">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>data</td>
+                                            <td>string|array</td>
+                                            <td>null</td>
+                                            <td class="text-left">
+                                                Data source. Array of objects or a URL to JSON string/file.
+                                                <p><small>NOTE: If using a URL, it will load the data once.</small></p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>url</td>
+                                            <td>string</td>
+                                            <td>null</td>
+                                            <td class="text-left">
+                                                URL to remote data source. This is useful when data is just too big to pass to <code>data</code> option.
+                                                The POST request will send parameters:
+                                                <ul>
+                                                    <li><code>keyword</code>: The current input keyword</li>
+                                                    <li><code>contain</code>: The <code>searchContain</code> option value</li>
+                                                </ul>
+                                                <small>NOTE: It will keep requesting the server for data whenever is appropriate. If possible, filter also on the server side to improve performance.</small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>searchContain</td>
+                                            <td>boolean</td>
+                                            <td>false</td>
+                                            <td class="text-left">
+                                                By default, Flexdatalist's search matches starting at the beginning of a word.
+                                                Setting this option to true allows matches starting from anywhere within a word.
+                                                This is especially useful for options that include a lot of special characters or phrases in ()s and []s.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>minLength</td>
+                                            <td>integer</td>
+                                            <td>2</td>
+                                            <td class="text-left">
+                                                Search if there are n or greater characters.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>groupBy</td>
+                                            <td>boolean</td>
+                                            <td>false</td>
+                                            <td class="text-left">
+                                                Group results by property value.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>selectionRequired</td>
+                                            <td>boolean</td>
+                                            <td>false</td>
+                                            <td class="text-left">
+                                                Selection from search results is required.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>focusFirstResult</td>
+                                            <td>boolean</td>
+                                            <td>false</td>
+                                            <td class="text-left">
+                                                Select first result.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>searchIn</td>
+                                            <td>string|array</td>
+                                            <td>["label"]</td>
+                                            <td class="text-left">
+                                                Name of property (or properties) where it will search.                                             
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>visibleProperties</td>
+                                            <td>array</td>
+                                            <td>[]</td>
+                                            <td class="text-left">
+                                                <p>Name of properties values that will appear with the search result.</p>
+                                                <p>Each property value will be wrapped with a <code>&lt;span class="item item-<em>the_property_name</em>"&gt;<em>Property Value</em>&lt;/span&gt;</code> so that its possible to style the appearance of additional information in the results.</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>textProperty</td>
+                                            <td>string</td>
+                                            <td>null</td>
+                                            <td class="text-left">
+                                                <p>The text that will be visible to the user</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>valueProperty</td>
+                                            <td>string|object/array</td>
+                                            <td>null</td>
+                                            <td class="text-left">
+                                                <p>The property name that when selected its value will be sent with the form.</p>
+                                                <p>If you wanna send properties from selected item, set this option to <code>*</code></p>
+                                            </td>
+                                        </tr>
+                                        
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </section>
+
+                <!-- Events Section -->
+                <section id="events">
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <h2>Events</h2>
+                            <p></p>
+                            <hr class="star-primary">
+
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover text-left">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Parameters</th>
+                                            <th class="text-left" width="60%">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>init:flexdatalist</td>
+                                            <td>
+                                                <ol>
+                                                    <li>Event instance</li>
+                                                    <li>Options</li>
+                                                </ol>
+                                            </td>
+                                            <td class="text-left">
+                                                Triggered on element initialization.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>change:flexdatalist</td>
+                                            <td>
+                                                <ol>
+                                                    <li>Event instance</li>
+                                                    <li>Input value</li>
+                                                    <li>Input text</li>
+                                                    <li>Options</li>
+                                                </ol>
+                                            </td>
+                                            <td class="text-left">
+                                                Triggered every time the value in input changes.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>select:flexdatalist</td>
+                                            <td>
+                                                <ol>
+                                                    <li>Event instance</li>
+                                                    <li>Selected item object</li>
+                                                    <li>Options</li>
+                                                </ol>
+                                            </td>
+                                            <td class="text-left">
+                                                Triggered every time the user selects an option from results.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>                        
+                    </div>
+                </section>
+                
+                <!-- Why Section -->
+                <section id="why">
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <h2>Why?</h2>
+                            <p></p>
+                            <hr class="star-primary">
+
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <p>After searching and not finding a standalone, light (not dependent on jQueryUI), autocomplete that did everything I needed to a project I created Flexdatalist.</p>
+                            <p>Hope it's useful to you as it is to me. Have fun ;)</p>
+                        </div>
+                        
+                    </div>
+                </section>
+
+                <!-- Why Section -->
+                <footer class="text-center">
+                    <small>Copyright &copy; 2016</small> <a target="_blank" href="http://sergiodinislopes.pt"><img src="https://dl.dropboxusercontent.com/u/3049154/sergiolopes/footer_logo_black.png"></a>
+                </footer>
 
 <datalist id="languages">
     <option value="PHP">PHP</option>
@@ -547,7 +723,7 @@
         <script src="js/demo.js"></script>
 
         <!-- Flexdatalist -->
-        <script src="../jquery.flexdatalist.js"></script>
+        <script src="src/jquery.flexdatalist.js"></script>
         <script src="js/google-code-prettify/run_prettify.js"></script>
         
     </body>

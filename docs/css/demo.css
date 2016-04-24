@@ -202,7 +202,7 @@ section.success a.active {
 
 @media(max-width:767px) {
     section {
-        padding: 75px 0;
+        padding: 75px 20px;
     }
 
     section.first {
@@ -285,7 +285,9 @@ form .row:first-child .floating-label-form-group {
 }
 
 footer {
-    color: #fff;
+    color: #999;
+    margin: 30px;
+    padding: 10px 0;
 }
 
 footer h3 {
