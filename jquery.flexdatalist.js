@@ -18,6 +18,8 @@
     $.fn.flexdatalist = function(options) {
         var $document = $(document),
             _this = this;
+
+        // Handle selection list keyboard shortcuts and events.
         if (!$document.data('flexdatalist')) {
             // Remove items on click outside
             $(document).mouseup(function (event) {
@@ -65,6 +67,9 @@
             }).data('flexdatalist', true);
         }
 
+    /**
+     * Simple scrollto element utility function.
+     */
         this._scrollTo = function ($ul, $active) {
             var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
             $ul.animate({
@@ -72,6 +77,57 @@
             }, 100);
         }
 
+    /**
+     * Get key code from event.
+     */
+        this._keyNum = function (event) {
+            return event.which || event.keyCode;
+        }
+
+    /**
+     * Position results below parent element.
+     */
+        this._ignoreKey = function (event) {
+            var keynum = _this._keyNum(event);
+            return keynum === 0 || keynum === 13 || keynum === 38 || keynum === 40;
+        }
+
+    /**
+     * Is variable empty.
+     */
+        this._isEmpty = function (value) {
+            if (!_this._isDefined(value)) {
+                return true;
+            } else if (value === null) {
+                return true;
+            } else if (this._isObject(value) && Object.keys(value).length === 0) {
+                return true;
+            } else if (value === '') {
+                return true;
+            }
+            return false;
+        }
+
+    /**
+     * Is variable an object.
+     */
+        this._isObject = function (value) {
+            return (value && typeof value === 'object')
+        }
+
+    /**
+     * Check if variable (and optionally property) is defined.
+     */
+        this._isDefined = function (variable, property) {
+            if (typeof property !== 'undefined') {
+                return (typeof variable[property] !== 'undefined');
+            }
+            return (typeof variable !== 'undefined');
+        }
+
+    /**
+     * Each element iteration.
+     */
         return this.each(function() {
             var $this = $(this),
                 _cache = {},
@@ -87,7 +143,6 @@
                 cache: true,
                 searchContain: false,
                 minLength: 2,
-                mergeRemoteData: false,
                 groupBy: false,
                 selectionRequired: false,
                 focusFirstResult: false,
@@ -102,9 +157,10 @@
             options.multiple = $this.attr('multiple');
 
             // Handle multiple values
-            var $_this = $this.clone(true)
-                .attr('name', null)
-                .removeClass('flexdatalist');
+            var $_this = $this
+                    .clone(true)
+                    .attr('name', null)
+                    .removeClass('flexdatalist');
             if (options.multiple) {
                 var $ulMultiple = $('<ul>')
                     .addClass('flexdatalist-multiple')
@@ -122,51 +178,53 @@
                     .appendTo($ulMultiple);
             } else {
                 $_this.insertAfter($this);
-            }            
+            }
             $this.addClass('flexdatalist').attr('type', 'hidden');
 
         /**
          * Initialize.
          */
-            $this.init = function () {
+            $this._init = function () {
                 // Set datalist data
-                $this.datalist();
+                $this._datalist();
                 // Listen to parent input key presses and state events.
                 $_this.on('input keyup', function (event) {
-                    var val = $this.keyword();
-                    if ($this._ignoreKey(event)) {
+                    var val = $this._keyword();
+                    if (_this._ignoreKey(event)) {
                         return;
                     }
                     if (val.length >= options.minLength) {
-                        $this.search();
+                        $this._search(val, function (results) {
+                            $this._showResults(results);
+                        });
                     } else {
-                        $this.removeResults();
+                        $this._removeResults();
                     }
                     if (!options.multiple) {
                         if (!options.selectionRequired) {
-                            $this.value(val);
-                        } else if (!$this.selected()) {
-                            $this.val('');
+                            $this._value(val);
+                        } else if (!$this._selected()) {
+                            $this._value('');
                         }
                     }
                 }).on('input keydown', function (event) {
-                    if ($this._keyNum(event) === 188 && !options.selectionRequired && options.multiple) {
+                    if (_this._keyNum(event) === 188 && !options.selectionRequired && options.multiple) {
                         event.preventDefault();
-                        $this.value($this.keyword());
+                        $this._value($this._keyword());
                     }
                 }).blur(function () {
-                    if (options.selectionRequired && !$this.selected()) {
-                        $this.val('');
+                    if (options.selectionRequired && !$this._selected()) {
+                        $this._value('');
                     }
                 })
                 .attr('autocomplete', 'off');
-                
+
                 $this
                     .addClass('flexdatalist-set')
                     .trigger('init:flexdatalist', [options]);
 
                 window.onresize = function(event) {
-                    $this.position();
+                    $this._position();
                 };
             }
 
@@ -175,64 +233,45 @@
          */
             $this._initValue = function () {
                 var value = $this.attr('value');
-                if (value === '') {
+                if (_this._isEmpty(value)) {
                     return;
                 }
-                
-                // TODO
-                return;
-                if ($this.toJSON()) {
-                    var value = $this._parseValue(value);
-                    if (typeof value === 'object' && Object.keys(value).length > 0) {
-                        if (options.multiple) {
-                            $.each(value, function (i, _value) {
-                                $this.value(_value);
-                            });
-                        } else {
-                            $this.value(value);
-                        }
-                    } else {
-                        $this.val('');
-                    }
-                } else {
-                    $this.value(value);
-                }
+
+                $this._parseValue(value, function (values) {
+                    $this._values(values);
+                    $this.val('');
+                });
             }
 
         /**
-         * Keyboard key code.
+         * Parse initial value.
          */
-            $this._parseValue = function (data) {
-                if (typeof data === 'string') {
+            $this._parseValue = function (data, callback) {
+                if ($this._toJSON()) {
                     try {
-                        return JSON.parse(data);
-                    } catch (e) {
-                        return data;
-                    }
+                        callback(JSON.parse(data));
+                    } catch (e) {}
+                } else if ($this._toCSV()) {
+                    callback(data.split(','));
+                } else if (typeof options.valueProperty === 'string') {
+                    var _searchIn = options.searchIn;
+                    options.searchIn = options.valueProperty.split(',');
+                    $this._search(data, function (results) {
+                        options.searchIn = _searchIn;
+                        if (results.length > 0) {
+                            $this._values(results);
+                        }
+                    });
+                } else {
+                    callback(data);
                 }
-                return data;
-            }
-
-        /**
-         * Position results below parent element.
-         */
-            $this._keyNum = function (event) {
-                return event.which || event.keyCode;
-            }
-
-        /**
-         * Position results below parent element.
-         */
-            $this._ignoreKey = function (event) {
-                var keynum = $this._keyNum(event);
-                return keynum === 0 || keynum === 13 || keynum === 38 || keynum === 40;
             }
 
         /**
          * Get data.
          */
             $this._data = function (callback) {
-                if (options.data && typeof options.data === 'object') {
+                if (_this._isObject(options.data)) {
                     callback(options.data);
                     return;
                 } else if (typeof options.data === 'string') {
@@ -241,9 +280,9 @@
                     return;
                 }
 
-                var keyword = $this.keyword(),
+                var keyword = $this._keyword(),
                     keywordTruncated = keyword.substring(0, options.minLength),
-                    cachedData = $this.cache(keywordTruncated);
+                    cachedData = $this._cache(keywordTruncated);
 
                 // Check cache
                 if (cachedData) {
@@ -267,12 +306,12 @@
                         if (typeof _data === 'string' && _data.indexOf('[{') === 0) {
                             _data = JSON.parse(_data);
                         }
-                        if (typeof _data === 'object') {
+                        if (_this._isObject(_data)) {
                             callback(_data);
                             if (typeof options.data === 'string') {
                                 options.data = data;
                             } else if (options.url) {
-                                $this.cache(keywordTruncated, _data);
+                                $this._cache(keywordTruncated, _data);
                             }
                         }
                     }
@@ -282,7 +321,7 @@
         /**
          * Set datalist data, if exists.
          */
-            $this.datalist = function () {
+            $this._datalist = function () {
                 var list = $this.attr('list');
                 if (list) {
                     $_this.attr('list', null);
@@ -303,11 +342,11 @@
         /**
          * Cached data.
          */
-            $this.cache = function (key, data) {
+            $this._cache = function (key, data) {
                 if (options.cache) {
                     key = $this.normalizeString(key);
-                    if (typeof data === 'undefined') {
-                        if (typeof _cache[key] !== 'undefined') {
+                    if (!_this._isDefined(data)) {
+                        if (_this._isDefined(_cache, key)) {
                             data = _cache[key];
                         }
                         return data;
@@ -320,25 +359,19 @@
         /**
          * Position results below parent element.
          */
-            $this.search = function () {
+            $this._search = function (keyword, callback) {
                 $this._data(function (data) {
-                    var results = [],
-                        keyword = $this.keyword();
-                    // Merge remote data with data set on init.
-                    if (options.mergeRemoteData) {
-                        data = $.extends(options.data, data);
-                    }
-
+                    var results = [];                    
                     var groupProperty = options.groupBy;
                     for (var index = 0; index < data.length; index++) {
-                        var _data = $this.matches(data[index], keyword);
+                        var _data = $this._matches(data[index], keyword);
                         if (!_data) {
                             continue;
                         }
                         if (groupProperty) {
-                            if (typeof _data[groupProperty] !== 'undefined') {
+                            if (_this._isDefined(_data, groupProperty)) {
                                 var propertyValue = _data[groupProperty];
-                                if (typeof results[propertyValue] === 'undefined') {
+                                if (!_this._isDefined(results, propertyValue)) {
                                     results[propertyValue] = [];
                                 }
                                 results[propertyValue].push(_data);
@@ -347,23 +380,25 @@
                             results.push(_data);
                         }
                     }
-                    $this.results(results);
+                    if (typeof callback === 'function') {
+                        callback(results);
+                    }                    
                 });
             }
 
         /**
          * Match against searchable properties.
          */
-            $this.matches = function (data, keyword) {
+            $this._matches = function (data, keyword) {
                 var matches = false;
                 for (var si = 0; si < options.searchIn.length; si++) {
                     var searchProperty = options.searchIn[si];
-                    if (typeof data[searchProperty] === 'undefined') {
+                    if (!_this._isDefined(data, searchProperty)) {
                         continue;
                     }
                     var propertyValue = data[searchProperty];
-                    if ($this.find(propertyValue, keyword)) {
-                        data[searchProperty + '_highlight'] = $this.highlight(propertyValue, keyword);
+                    if ($this._find(propertyValue, keyword)) {
+                        data[searchProperty + '_highlight'] = $this._highlight(propertyValue, keyword);
                         matches = true;
                     }
                 }
@@ -373,7 +408,7 @@
         /**
          * Wrap found keyword with span.highlight
          */
-            $this.highlight = function (text, keyword) {
+            $this._highlight = function (text, keyword) {
                 return text.replace(
                     new RegExp(keyword, (options.searchContain ? "ig" : "i")),
                     '<span class="highlight">$&</span>'
@@ -383,7 +418,7 @@
         /**
          * Search for keyword in string.
          */
-            $this.find = function (text, keyword) {
+            $this._find = function (text, keyword) {
                 text = $this.normalizeString(text),
                 keyword = $this.normalizeString(keyword);
                 return (options.searchContain ? (text.indexOf(keyword) >= 0) : (text.indexOf(keyword) === 0));
@@ -392,24 +427,24 @@
         /**
          * Show results.
          */
-            $this.results = function (data) {
-                $this.removeResults();
+            $this._showResults = function (data) {
+                $this._removeResults();
 
                 if (data.length === 0 && Object.keys(data).length === 0) {
                     return;
                 }
 
-                var $ul = $this.getContainer();
-                if ($this.selected()) {
-                    $this.selected(false).value('');
+                var $ul = $this._getResultsContainer();
+                if ($this._selected()) {
+                    $this._selected(false)._value('');
                 }
                 if (!options.groupBy) {
-                    $this.items(data, $ul);
+                    $this._items(data, $ul);
                 } else {
                     Object.keys(data).forEach(function (groupName, index) {
                         var items = data[groupName],
                             property = options.groupBy,
-                            groupText = $this.getHighlight(items[0], property, groupName);
+                            groupText = $this._getHighlight(items[0], property, groupName);
 
                         var $li = $('<li>')
                                 .addClass('group')
@@ -423,7 +458,7 @@
                                 )
                                 .appendTo($ul);
 
-                        $this.items(items, $ul);
+                        $this._items(items, $ul);
                     });
                 }
 
@@ -431,7 +466,7 @@
                 $li.on('click', function (event) {
                     var item = $(this).data('item');
                     if (item) {
-                        $this.selected(true).removeResults().value(item);
+                        $this._selected(true)._removeResults()._value(item);
                         $this.trigger('select:flexdatalist', [item, options]);
                     }
                 }).hover(function() {
@@ -445,13 +480,13 @@
                     $li.filter(':first').addClass('active');
                 }
 
-                $this.position();
+                $this._position();
             }
 
         /**
          * Get/create list container.
          */
-            $this.getContainer = function () {
+            $this._getResultsContainer = function () {
                 var $target = $this;
                 if (options.multiple) {
                     $target = $ulMultiple;
@@ -472,33 +507,25 @@
             }
 
         /**
-         * Remove results.
-         */
-            $this.removeResults = function () {
-                $('ul.flexdatalist-results').remove();
-                return $this;
-            }
-
-        /**
          * Items iteration.
          */
-            $this.items = function (items, $ul) {
+            $this._items = function (items, $ul) {
                 for (var index = 0; index < items.length; index++) {
-                    $this.item(items[index]).appendTo($ul);
+                    $this._item(items[index]).appendTo($ul);
                 }
             }
 
         /**
          * Result item creation.
          */
-            $this.item = function (item) {
+            $this._item = function (item) {
                 var $li = $('<li>')
                     .data('item', item)
                     .addClass('item');
 
                 for (var index = 0; index < options.visibleProperties.length; index++) {
                     var property = options.visibleProperties[index];
-                    if (options.groupBy && options.groupBy === property || typeof item[property] === 'undefined') {
+                    if (options.groupBy && options.groupBy === property || !_this._isDefined(item, property)) {
                         continue;
                     }
                     var $item = {};
@@ -508,7 +535,7 @@
                             .addClass('item-' + property)
                             .attr('src', item[property]);
                     } else {
-                        var propertyText = $this.getHighlight(item, property);
+                        var propertyText = $this._getHighlight(item, property);
                         // Other text properties
                         $item = $('<span>')
                             .addClass('item-' + property)
@@ -520,11 +547,19 @@
             }
 
         /**
-         * Check if data was selected.
+         * Remove results.
          */
-            $this.selected = function (selected) {
+            $this._removeResults = function () {
+                $('ul.flexdatalist-results').remove();
+                return $this;
+            }
+
+        /**
+         * Check if is selected or set field as selected.
+         */
+            $this._selected = function (selected) {
                 var className = 'flexdatalist-selected';
-                if (typeof selected === 'undefined') {
+                if (!_this._isDefined(selected)) {
                     return $this.hasClass(className);
                 }
                 selected ? $this.addClass(className) : $this.removeClass(className);
@@ -532,14 +567,24 @@
             }
 
         /**
+         * Set multiple values.
+         */
+            $this._values = function (values) {
+                if (_this._isObject(values) && _this._isDefined(values) && values.length > 0) {
+                    $.each(values, function (i, value) {
+                        $this._value(value);
+                    });
+                    return;
+                }
+                $this._value(values);
+            }
+            
+        /**
          * Set value on item selection.
          */
-            $this.value = function (val) {
-                if (typeof val === 'undefined') {
-                    return $this.data('value');
-                }
-                var text = $this._text(val);
-                var value = $this._value(val);
+            $this._value = function (val) {
+                var text = $this._getText(val);
+                var value = $this._getValue(val);
                 
                 if (options.multiple) {
                     if (val === '') {
@@ -554,7 +599,7 @@
 
                     $li.find('span.remove').click(function () {
                         var $container = $(this).parent();
-                        if ($this.toJSON() || $this.toCSV()) {
+                        if ($this._toJSON() || $this._toCSV()) {
                             var currentValue = $this._inputValue();
                             currentValue.splice($container.index(), 1);
                             $this._inputValue(currentValue);
@@ -562,7 +607,6 @@
                         $container.remove();
                     });
                 } else {
-                    text = text.trim();
                     if (text.length > 0) {
                         $_this.val(text);
                     }
@@ -570,14 +614,15 @@
                 $this._inputValue(value);
                 return $this;
             }
-            
+
         /**
-         * Set value on item selection.
+         * Get/Set input value.
          */
             $this._inputValue = function (value) {
-                var isJSON = $this.toJSON(),
-                    isCSV = $this.toCSV();
-                if (typeof value === 'undefined') {
+                var isJSON = $this._toJSON(),
+                    isCSV = $this._toCSV();
+
+                if (!_this._isDefined(value)) {
                     value = $this.val();
                     if (value) {
                         if (isJSON) {
@@ -590,11 +635,13 @@
                     }
                     return value;
                 }
-                
-                if (isJSON) {
-                    value = JSON.stringify(value);
-                } else if (isCSV) {
-                    value = value.join(',');
+
+                if (_this._isObject(value)) {
+                    if (isJSON && !_this._isEmpty(value)) {
+                        value = JSON.stringify(value);
+                    } else if (isCSV) {
+                        value = value.join(',');
+                    }
                 }
                 $this.val(value);
                 $this.trigger('change:flexdatalist', [value, options]);
@@ -604,11 +651,11 @@
         /**
          * Get text that will be shown to user on input field.
          */
-            $this._text = function (item) {
+            $this._getText = function (item) {
                 var text = item;
-                if (typeof item === 'object') {
+                if (_this._isObject(item)) {
                     text = item[options.searchIn[0]];
-                    if (typeof item[options.textProperty] !== 'undefined') {
+                    if (_this._isDefined(item, options.textProperty)) {
                         text = item[options.textProperty];
                     } else {
                         text = $this._replacePlaceholders(item, options.textProperty, text);
@@ -621,15 +668,15 @@
          * Get the value that will be added to hidden input.
          * This is the value that will go with the form submittion.
          */
-            $this._value = function (item) {
+            $this._getValue = function (item) {
                 var value = item;
-                if (typeof item === 'object') {
+                if (_this._isObject(item)) {
                     value = item[options.searchIn[0]];
                     if (options.valueProperty === '*') {
                         value = item;
-                    } else if (typeof item[options.valueProperty] !== 'undefined') {
+                    } else if (_this._isDefined(item, options.valueProperty)) {
                         value = item[options.valueProperty];
-                    } else if ($this.toJSON()) {
+                    } else if ($this._toJSON()) {
                         var value = {},
                             properties = options.valueProperty,
                             textProperties = options.textProperty;
@@ -640,17 +687,17 @@
                             if (typeof textProperties === 'string') {
                                 _properties = $this._parsePlaceholders(textProperties);
                             }
-                            if (_properties && typeof _properties === 'object') {
+                            if (_this._isObject(_properties)) {
                                 $.each(_properties, function (string, property) {
                                     properties.push(property);
                                 });
                             }
-                        } else if (typeof item[textProperties] !== 'undefined') {
+                        } else if (_this._isDefined(item, textProperties)) {
                             properties.push(textProperties);
                         }
 
                         $.each(properties, function (i, property) {
-                            if (typeof item[property] !== 'undefined') {
+                            if (_this._isDefined(item, property)) {
                                 value[property] = item[property];
                             }
                         });
@@ -658,10 +705,12 @@
                         value = $this._replacePlaceholders(item, options.valueProperty, value);
                     }
                 }
-                if ($this.toJSON() || $this.toCSV()) {
+                if (options.multiple && ($this._toJSON() || $this._toCSV())) {
                     var currentValue = $this._inputValue();
-                    currentValue.push(value);
-                    value = currentValue;
+                    if (!_this._isEmpty(value) && _this._isObject(currentValue)) {
+                        currentValue.push(value);
+                        value = currentValue;
+                    }
                 }
                 return value;
             }
@@ -671,11 +720,11 @@
          * with respective property value.
          */
             $this._replacePlaceholders = function (item, pattern, value) {
-                if (typeof item === 'object' && typeof pattern === 'string') {
+                if (_this._isObject(item) && typeof pattern === 'string') {
                     var properties = $this._parsePlaceholders(pattern);
                     if (properties) {
                         $.each(properties, function (string, property) {
-                            if (typeof item[property] !== 'undefined') {
+                            if (_this._isDefined(item, property)) {
                                 pattern = pattern.replace(string, item[property]);
                             }
                         });
@@ -710,39 +759,39 @@
         /**
          * Get keyword with left trim.
          */
-            $this.keyword = function () {
+            $this._keyword = function () {
                 return $_this.val().replace(/^\s+/, "");
             }
-            
+
         /**
          * Check if input value must be a JSON string.
          */
-            $this.toJSON = function () {
-                return (options.valueProperty && typeof options.valueProperty === 'object') || options.valueProperty === '*';
+            $this._toJSON = function () {
+                return _this._isObject(options.valueProperty) || options.valueProperty === '*';
             }
-            
+
         /**
          * Check if input value must be a CSV string.
          */
-            $this.toCSV = function () {
-                return (!$this.toJSON() && options.multiple);
+            $this._toCSV = function () {
+                return (!$this._toJSON() && options.multiple);
             }
 
         /**
          * Check if highlighted property value exists,
          * if true, return it, if not, fallback to given string
          */
-            $this.getHighlight = function (item, property, fallback) {
-                if (typeof item[property + '_highlight'] !== 'undefined') {
+            $this._getHighlight = function (item, property, fallback) {
+                if (_this._isDefined(item, property + '_highlight')) {
                     return item[property + '_highlight'];
                 }
-                return (item[property] !== 'undefined' ? item[property] : fallback);
+                return (_this._isDefined(item, property) ? item[property] : fallback);
             }
 
         /**
          * Position results below parent element.
          */
-            $this.position = function () {
+            $this._position = function () {
                 var $target = $_this;
                 if (options.multiple) {
                     $target = $ulMultiple;
@@ -755,7 +804,7 @@
                     'z-index': ($target.css('z-index') + 1)
                 });
             }
-            $this.init();
+            $this._init();
             $this._initValue();
         });
     }

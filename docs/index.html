@@ -377,13 +377,143 @@
 
                         </div>
                     </div>
-                        <div class="col-lg-12">
-                            <h4>How to install</h4>
-                            <p>Using data from <code>&lt;datalist&gt;</code></p>
-                        </div>
-                        <div class="row">
+                </section>
 
+                <!-- Options Section -->
+                <section id="options">
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <h2>Options</h2>
+                            <p>Plugin configuration options</p>
+                            <hr class="star-primary">
                         </div>
+                        <div class="col-md-12">
+                            <table class="table table-striped table-hover text-left">
+                                <thead>
+                                    <tr>
+                                        <th>Option</th>
+                                        <th>Type</th>
+                                        <th>Default</th>
+                                        <th class="text-left">Example</th>
+                                        <th class="text-left" width="60%">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>data</td>
+                                        <td>string|object</td>
+                                        <td>null</td>
+                                        <td class="text-left">[{name: "John Doe"},{name: "Joan Doe"},...]</td>
+                                        <td class="text-left">
+                                            Data source. Array of items or a URL to JSON string/file.
+                                            <p><small>NOTE: If using a URL, it will load the data once.</small></p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>url</td>
+                                        <td>string</td>
+                                        <td>null</td>
+                                        <td class="text-left">http://example.com/some-url</td>
+                                        <td class="text-left">
+                                            URL to remote data source. This is useful when data is just too big to pass to <code>data</code> option.
+                                            The POST request will send parameters:
+                                            <ul>
+                                                <li><code>keyword</code>: The current input keyword</li>
+                                                <li><code>contain</code>: The <code>searchContain</code> option value</li>
+                                            </ul>
+                                            <small>NOTE: It will keep requesting the server for data whenever is appropriate. If possible, filter also on the server side to improve performance.</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>searchContain</td>
+                                        <td>boolean</td>
+                                        <td>false</td>
+                                        <td class="text-left">true</td>
+                                        <td class="text-left">
+                                            By default, Flexdatalist's search matches starting at the beginning of a word.
+                                            Setting this option to true allows matches starting from anywhere within a word.
+                                            This is especially useful for options that include a lot of special characters or phrases in ()s and []s.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>minLength</td>
+                                        <td>integer</td>
+                                        <td>2</td>
+                                        <td class="text-left"></td>
+                                        <td class="text-left">
+                                            Search if there are n or greater characters.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>groupBy</td>
+                                        <td>boolean</td>
+                                        <td>false</td>
+                                        <td class="text-left">'continent'</td>
+                                        <td class="text-left">
+                                            Group results by property value.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>selectionRequired</td>
+                                        <td>boolean</td>
+                                        <td>false</td>
+                                        <td class="text-left"></td>
+                                        <td class="text-left">
+                                            Selection from search results is required.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>focusFirstResult</td>
+                                        <td>boolean</td>
+                                        <td>false</td>
+                                        <td class="text-left"></td>
+                                        <td class="text-left">
+                                            Select first result.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>searchIn</td>
+                                        <td>string|object/array</td>
+                                        <td>["label"]</td>
+                                        <td class="text-left">["value"]</td>
+                                        <td class="text-left">
+                                            Name of property (or properties) where it will search.                                             
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>visibleProperties</td>
+                                        <td>object/array</td>
+                                        <td>[]</td>
+                                        <td class="text-left">["name","continent","capital"]</td>
+                                        <td class="text-left">
+                                            <p>Name of properties values that will appear with the search result.</p>
+                                            <p>Each property value will be wrapped with a <code>&lt;span class="item-property_name"&gt;Property Value&lt;/span&gt;</code> so that its possible to style the appearance of additional information in the results.</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>textProperty</td>
+                                        <td>string</td>
+                                        <td>null</td>
+                                        <td class="text-left">{name}, {capital}</td>
+                                        <td class="text-left">
+                                            <p>The text that will be visible to the user</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>valueProperty</td>
+                                        <td>string|object/array</td>
+                                        <td>null</td>
+                                        <td class="text-left"><code>id</code></td>
+                                        <td class="text-left">
+                                            <p>The property name that when selected its value will be sent with the form.</p>
+                                            <p>If you wanna send properties from selected item, set this option to <code>*</code></p>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </section>
 
 <datalist id="languages">
@@ -398,7 +528,6 @@
     <option value="Lisp">Lisp</option>
     <option value="Swift">Swift</option>
 </datalist>
-                
                 
             </form>
         </div>

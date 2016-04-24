@@ -9,14 +9,6 @@ body {
     background: #F3F3F4;
 }
 
-p {
-    font-size: 20px;
-}
-
-p.small {
-    font-size: 16px;
-}
-
 a,
 a:hover,
 a:focus,
