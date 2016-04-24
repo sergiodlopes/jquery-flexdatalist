@@ -116,10 +116,11 @@
      * Check if variable (and optionally property) is defined.
      */
         this._isDefined = function (variable, property) {
-            if (typeof property !== 'undefined') {
+            var _variable = (typeof variable !== 'undefined');
+            if (_variable && typeof property !== 'undefined') {
                 return (typeof variable[property] !== 'undefined');
             }
-            return (typeof variable !== 'undefined');
+            return _variable;
         }
 
     /**
@@ -200,7 +201,7 @@
                     if (!options.multiple) {
                         if (!options.selectionRequired) {
                             $this._value(val);
-                        } else if (!$this._selected()) {
+                        } else if (val.length === 0 || !$this._selected()) {
                             $this._value('');
                         }
                     }
@@ -235,8 +236,10 @@
                 }
 
                 $this._parseValue(value, function (values) {
-                    $this._values(values);
-                    $this.val('');
+                    if (!_this._isEmpty(values)) {
+                        $this.val('');
+                        $this._values(values);
+                    }
                 });
             }
 
@@ -253,11 +256,9 @@
                 } else if (typeof options.valueProperty === 'string') {
                     var _searchIn = options.searchIn;
                     options.searchIn = options.valueProperty.split(',');
-                    $this._search(data, function (results) {
+                    $this._search(data, function (results, matches) {
                         options.searchIn = _searchIn;
-                        if (results.length > 0) {
-                            $this._values(results);
-                        }
+                        $this._values(matches);
                     });
                 } else {
                     callback(data);
@@ -358,13 +359,15 @@
          */
             $this._search = function (keyword, callback) {
                 $this._data(function (data) {
-                    var results = [];                    
+                    var results = [],
+                        matches = [];                    
                     var groupProperty = options.groupBy;
                     for (var index = 0; index < data.length; index++) {
                         var _data = $this._matches(data[index], keyword);
                         if (!_data) {
                             continue;
                         }
+                        matches.push(_data);
                         if (groupProperty) {
                             if (_this._isDefined(_data, groupProperty)) {
                                 var propertyValue = _data[groupProperty];
@@ -377,9 +380,9 @@
                             results.push(_data);
                         }
                     }
-                    if (typeof callback === 'function') {
-                        callback(results);
-                    }                    
+                    if (matches && matches.length > 0) {
+                        callback(results, matches);
+                    }
                 });
             }
 
@@ -426,10 +429,6 @@
          */
             $this._showResults = function (data) {
                 $this._removeResults();
-
-                if (data.length === 0 && Object.keys(data).length === 0) {
-                    return;
-                }
 
                 var $ul = $this._getResultsContainer();
                 if ($this._selected()) {
@@ -603,10 +602,8 @@
                         }
                         $container.remove();
                     });
-                } else {
-                    if (text.length > 0) {
-                        $_this.val(text);
-                    }
+                } else if (text) {
+                    $_this.val(text);
                 }
                 $this._inputValue(value, text);
                 return $this;
@@ -698,8 +695,6 @@
                                 value[property] = item[property];
                             }
                         });
-                    } else {
-                        value = $this._replacePlaceholders(item, options.valueProperty, value);
                     }
                 }
                 if (options.multiple && ($this._toJSON() || $this._toCSV())) {
@@ -719,7 +714,7 @@
             $this._replacePlaceholders = function (item, pattern, value) {
                 if (_this._isObject(item) && typeof pattern === 'string') {
                     var properties = $this._parsePlaceholders(pattern);
-                    if (properties) {
+                    if (!_this._isEmpty(item) && properties) {
                         $.each(properties, function (string, property) {
                             if (_this._isDefined(item, property)) {
                                 pattern = pattern.replace(string, item[property]);
