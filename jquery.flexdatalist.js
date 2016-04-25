@@ -139,7 +139,6 @@
                 url: null,
                 data: null,
                 cache: true,
-                searchContain: false,
                 minLength: 2,
                 groupBy: false,
                 selectionRequired: false,
@@ -147,7 +146,9 @@
                 textProperty: null,
                 valueProperty: null,
                 visibleProperties: [],
-                searchIn: ['label']
+                searchIn: ['label'],
+                searchContain: false,
+                searchEqual: false
             }, options, $this.data());
 
             options.searchIn = typeof options.searchIn === 'string' ? options.searchIn.split(',') : options.searchIn;
@@ -251,15 +252,22 @@
                     try {
                         callback(JSON.parse(data));
                     } catch (e) {}
-                } else if ($this._toCSV()) {
-                    callback(data.split(','));
-                } else if (typeof options.valueProperty === 'string') {
-                    var _searchIn = options.searchIn;
-                    options.searchIn = options.valueProperty.split(',');
-                    $this._search(data, function (results, matches) {
-                        options.searchIn = _searchIn;
-                        $this._values(matches);
-                    });
+                } else if ($this._toCSV() || typeof options.valueProperty === 'string') {
+                    var values = data.split(',');
+                    if (typeof options.valueProperty === 'string') {
+                        var _searchIn = options.searchIn;
+                        options.searchIn = options.valueProperty.split(',');
+                        options.searchEqual = true;
+                        $this._search(values, function (results, matches) {
+                            if (matches.length > 0) {
+                                callback(matches);
+                            }
+                            options.searchIn = _searchIn;
+                            options.searchEqual = false;
+                        });
+                    } else {
+                        callback(values);
+                    }
                 } else {
                     callback(data);
                 }
@@ -342,7 +350,7 @@
          */
             $this._cache = function (key, data) {
                 if (options.cache) {
-                    key = $this.normalizeString(key);
+                    key = $this._normalizeString(key);
                     if (!_this._isDefined(data)) {
                         if (_this._isDefined(_cache, key)) {
                             data = _cache[key];
@@ -355,54 +363,58 @@
             }
 
         /**
-         * Position results below parent element.
+         * Search for keywords in data and return matches.
          */
-            $this._search = function (keyword, callback) {
+            $this._search = function (keywords, callback) {
+                if (typeof keywords === 'string') {
+                    keywords = [keywords];
+                }
                 $this._data(function (data) {
                     var results = [],
                         matches = [];                    
                     var groupProperty = options.groupBy;
-                    for (var index = 0; index < data.length; index++) {
-                        var _data = $this._matches(data[index], keyword);
-                        if (!_data) {
-                            continue;
-                        }
-                        matches.push(_data);
-                        if (groupProperty) {
-                            if (_this._isDefined(_data, groupProperty)) {
-                                var propertyValue = _data[groupProperty];
-                                if (!_this._isDefined(results, propertyValue)) {
-                                    results[propertyValue] = [];
-                                }
-                                results[propertyValue].push(_data);
+                    for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
+                        var keyword = keywords[kwindex];
+                        for (var index = 0; index < data.length; index++) {
+                            var _data = $this._matches(data[index], keyword);
+                            if (!_data) {
+                                continue;
                             }
-                        } else {
-                            results.push(_data);
+                            matches.push(_data);
+                            if (groupProperty) {
+                                if (_this._isDefined(_data, groupProperty)) {
+                                    var propertyValue = _data[groupProperty];
+                                    if (!_this._isDefined(results, propertyValue)) {
+                                        results[propertyValue] = [];
+                                    }
+                                    results[propertyValue].push(_data);
+                                }
+                            } else {
+                                results.push(_data);
+                            }
                         }
                     }
-                    if (matches && matches.length > 0) {
-                        callback(results, matches);
-                    }
+                    callback(results, matches);
                 });
             }
 
         /**
          * Match against searchable properties.
          */
-            $this._matches = function (data, keyword) {
-                var matches = false;
-                for (var si = 0; si < options.searchIn.length; si++) {
-                    var searchProperty = options.searchIn[si];
-                    if (!_this._isDefined(data, searchProperty)) {
+            $this._matches = function (item, keyword) {
+                var hasMatches = false;
+                for (var index = 0; index < options.searchIn.length; index++) {
+                    var searchProperty = options.searchIn[index];
+                    if (!_this._isDefined(item, searchProperty)) {
                         continue;
                     }
-                    var propertyValue = data[searchProperty];
+                    var propertyValue = item[searchProperty];
                     if ($this._find(propertyValue, keyword)) {
-                        data[searchProperty + '_highlight'] = $this._highlight(propertyValue, keyword);
-                        matches = true;
+                        item[searchProperty + '_highlight'] = $this._highlight(propertyValue, keyword);
+                        hasMatches = true;
                     }
                 }
-                return matches ? data : null;
+                return hasMatches ? item : null;
             }
 
         /**
@@ -419,8 +431,11 @@
          * Search for keyword in string.
          */
             $this._find = function (text, keyword) {
-                text = $this.normalizeString(text),
-                keyword = $this.normalizeString(keyword);
+                text = $this._normalizeString(text),
+                keyword = $this._normalizeString(keyword);
+                if (options.searchEqual) {
+                    return (text == keyword);
+                }
                 return (options.searchContain ? (text.indexOf(keyword) >= 0) : (text.indexOf(keyword) === 0));
             }
 
@@ -742,10 +757,13 @@
             }
 
         /**
-         * Normalize string to a consistent one.
+         * Normalize string to a consistent one to perform the search/match.
          */
-            $this.normalizeString = function (string) {
-                return string.toUpperCase();
+            $this._normalizeString = function (string) {
+                if (typeof string === 'string') {
+                    return string.toUpperCase();
+                }
+                return string;
             }
 
         /**
