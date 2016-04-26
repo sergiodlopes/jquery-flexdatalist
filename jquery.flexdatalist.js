@@ -1,9 +1,9 @@
 /**
  * jQuery Flexdatalist.
- * Autocomplete alike to input fields with support for datalists.
+ * Autocomplete for input fields with support for datalists.
  * 
  * Version:
- * 1.0.3
+ * 1.1.0
  * 
  * Depends:
  * jquery.js 1.7+
@@ -15,7 +15,17 @@
  * https://github.com/sergiodlopes/jquery-flexdatalist/
  *
  */
-(function($) {
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(['jquery'], factory);
+  } else if (typeof module === 'object' && typeof module.exports === 'object') {
+    factory(require('jquery'));
+  } else {
+    // Browser globals
+    factory(jQuery);
+  }
+}(function($) {
     $.fn.flexdatalist = function(options) {
         var $document = $(document),
             _this = this;
@@ -823,4 +833,4 @@
         });
     }
     $('.flexdatalist').flexdatalist();
-})(jQuery);
+}));
