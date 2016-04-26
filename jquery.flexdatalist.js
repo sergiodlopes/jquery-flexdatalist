@@ -3,7 +3,7 @@
  * Autocomplete alike to input fields with support for datalists.
  * 
  * Version:
- * 1.0.2
+ * 1.0.3
  * 
  * Depends:
  * jquery.js 1.7+
