@@ -1,7 +1,10 @@
 /**
  * jQuery Flexdatalist.
  * Autocomplete alike to input fields with support for datalists.
- *
+ * 
+ * Version:
+ * 1.0.2
+ * 
  * Depends:
  * jquery.js 1.7+
  *
@@ -10,6 +13,7 @@
  *
  * Github:
  * https://github.com/sergiodlopes/jquery-flexdatalist/
+ *
  */
 (function($) {
     $.fn.flexdatalist = function(options) {
@@ -371,7 +375,7 @@
                 }
                 $this._data(function (data) {
                     var results = [],
-                        matches = [];                    
+                        matches = [];
                     var groupProperty = options.groupBy;
                     for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                         var keyword = keywords[kwindex];
@@ -589,14 +593,14 @@
                 }
                 $this._value(values);
             }
-            
+
         /**
          * Set value on item selection.
          */
             $this._value = function (val) {
                 var text = $this._getText(val);
                 var value = $this._getValue(val);
-                
+
                 if (options.multiple) {
                     if (val === '') {
                         return $this;
