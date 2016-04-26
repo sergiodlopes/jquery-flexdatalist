@@ -1,6 +1,6 @@
 /**
  * jQuery Flexdatalist.
- * Autocomplete alike to input fields with support for datalists.
+ * Autocomplete for input fields with support for datalists.
  * 
  * Version:
  * 1.0.3
@@ -22,7 +22,7 @@
 
         // Handle selection list keyboard shortcuts and events.
         if (!$document.data('flexdatalist')) {
-            // Remove items on click outside
+            // Remove results on outside click
             $(document).mouseup(function (event) {
                 var $container = $('.flexdatalist-results');
                 if (!$container.is(event.target) && $container.has(event.target).length === 0) {
@@ -810,7 +810,7 @@
                 if (options.multiple) {
                     $target = $ulMultiple;
                 }
-                // Set some required CSS propities
+                // Set some required CSS properties
                 $('ul.flexdatalist-results').css({
                     'width': $target.outerWidth() + 'px',
                     'top': (($target.offset().top + $target.outerHeight())) + 'px',
