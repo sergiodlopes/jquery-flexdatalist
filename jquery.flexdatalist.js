@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  * 
  * Version:
- * 1.0.3
+ * 1.0.4
  * 
  * Depends:
  * jquery.js 1.7+
@@ -16,6 +16,7 @@
  *
  */
 (function($) {
+    'use strict';
     $.fn.flexdatalist = function(options) {
         var $document = $(document),
             _this = this;
@@ -138,8 +139,7 @@
             if ($this.hasClass('flexdatalist-set')) {
                 return;
             }
-
-            var options = $.extend({
+            var _options = $.extend({
                 url: null,
                 data: null,
                 cache: true,
@@ -154,17 +154,17 @@
                 searchContain: false,
                 searchEqual: false
             }, options, $this.data());
-
-            options.searchIn = typeof options.searchIn === 'string' ? options.searchIn.split(',') : options.searchIn;
-            options.visibleProperties = options.visibleProperties.length === 0 ? options.searchIn : options.visibleProperties;
-            options.multiple = $this.attr('multiple');
-
+            
+            _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
+            _options.visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn : _options.visibleProperties;
+            _options.multiple = $this.attr('multiple');
+            
             // Handle multiple values
             var $_this = $this
                     .clone(true)
                     .attr('name', null)
                     .removeClass('flexdatalist');
-            if (options.multiple) {
+            if (_options.multiple) {
                 var $ulMultiple = $('<ul>')
                     .addClass('flexdatalist-multiple')
                     .css({
@@ -196,27 +196,27 @@
                     if (_this._ignoreKey(event)) {
                         return;
                     }
-                    if (val.length >= options.minLength) {
+                    if (val.length >= _options.minLength) {
                         $this._search(val, function (results) {
                             $this._showResults(results);
                         });
                     } else {
                         $this._removeResults();
                     }
-                    if (!options.multiple) {
-                        if (!options.selectionRequired) {
+                    if (!_options.multiple) {
+                        if (!_options.selectionRequired) {
                             $this._value(val);
                         } else if (val.length === 0 || !$this._selected()) {
                             $this._value('');
                         }
                     }
                 }).on('input keydown', function (event) {
-                    if (_this._keyNum(event) === 188 && !options.selectionRequired && options.multiple) {
+                    if (_this._keyNum(event) === 188 && !_options.selectionRequired && _options.multiple) {
                         event.preventDefault();
                         $this._value($this._keyword());
                     }
                 }).blur(function () {
-                    if (options.selectionRequired && !$this._selected()) {
+                    if (_options.selectionRequired && !$this._selected()) {
                         $this._value('');
                     }
                 })
@@ -224,7 +224,7 @@
 
                 $this
                     .addClass('flexdatalist-set')
-                    .trigger('init:flexdatalist', [options]);
+                    .trigger('init:flexdatalist', [_options]);
 
                 window.onresize = function(event) {
                     $this._position();
@@ -256,18 +256,18 @@
                     try {
                         callback(JSON.parse(data));
                     } catch (e) {}
-                } else if ($this._toCSV() || typeof options.valueProperty === 'string') {
+                } else if ($this._toCSV() || typeof _options.valueProperty === 'string') {
                     var values = data.split(',');
-                    if (typeof options.valueProperty === 'string') {
-                        var _searchIn = options.searchIn;
-                        options.searchIn = options.valueProperty.split(',');
-                        options.searchEqual = true;
+                    if (typeof _options.valueProperty === 'string') {
+                        var _searchIn = _options.searchIn;
+                        _options.searchIn = _options.valueProperty.split(',');
+                        _options.searchEqual = true;
                         $this._search(values, function (results, matches) {
                             if (matches.length > 0) {
                                 callback(matches);
                             }
-                            options.searchIn = _searchIn;
-                            options.searchEqual = false;
+                            _options.searchIn = _searchIn;
+                            _options.searchEqual = false;
                         });
                     } else {
                         callback(values);
@@ -281,17 +281,17 @@
          * Get data.
          */
             $this._data = function (callback) {
-                if (_this._isObject(options.data)) {
-                    callback(options.data);
+                if (_this._isObject(_options.data)) {
+                    callback(_options.data);
                     return;
-                } else if (typeof options.data === 'string') {
-                    options.url = options.data;
-                } else if (!options.url && !options.data) {
+                } else if (typeof _options.data === 'string') {
+                    _options.url = _options.data;
+                } else if (!_options.url && !_options.data) {
                     return;
                 }
 
                 var keyword = $this._keyword(),
-                    keywordTruncated = keyword.substring(0, options.minLength),
+                    keywordTruncated = keyword.substring(0, _options.minLength),
                     cachedData = $this._cache(keywordTruncated);
 
                 // Check cache
@@ -306,8 +306,8 @@
                 $this.addClass('flexdatalist-loading');
 
                 $.ajax({
-                    url: options.url,
-                    data: {keyword: keywordTruncated, contain: options.searchContain},
+                    url: _options.url,
+                    data: {keyword: keywordTruncated, contain: _options.searchContain},
                     type: 'post',
                     dataType: 'json',
                     success: function (data) {
@@ -318,9 +318,9 @@
                         }
                         if (_this._isObject(_data)) {
                             callback(_data);
-                            if (typeof options.data === 'string') {
-                                options.data = data;
-                            } else if (options.url) {
+                            if (typeof _options.data === 'string') {
+                                _options.data = data;
+                            } else if (_options.url) {
                                 $this._cache(keywordTruncated, _data);
                             }
                         }
@@ -333,14 +333,12 @@
          */
             $this._datalist = function () {
                 var list = $this.attr('list');
-                if (list) {
+                if (!_this._isEmpty(list)) {
                     $_this.attr('list', null);
-                    if (!options.data) {
-                        options.data = [];
-                    }
+                    _options.data = [];
                     $('#' + list).find('option').each(function() {
                         var val = $(this).val();
-                        options.data.push({
+                        _options.data.push({
                             label: val,
                             value: val
                         });
@@ -353,7 +351,7 @@
          * Cached data.
          */
             $this._cache = function (key, data) {
-                if (options.cache) {
+                if (_options.cache) {
                     key = $this._normalizeString(key);
                     if (!_this._isDefined(data)) {
                         if (_this._isDefined(_cache, key)) {
@@ -376,7 +374,7 @@
                 $this._data(function (data) {
                     var results = [],
                         matches = [];
-                    var groupProperty = options.groupBy;
+                    var groupProperty = _options.groupBy;
                     for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                         var keyword = keywords[kwindex];
                         for (var index = 0; index < data.length; index++) {
@@ -407,8 +405,8 @@
          */
             $this._matches = function (item, keyword) {
                 var hasMatches = false;
-                for (var index = 0; index < options.searchIn.length; index++) {
-                    var searchProperty = options.searchIn[index];
+                for (var index = 0; index < _options.searchIn.length; index++) {
+                    var searchProperty = _options.searchIn[index];
                     if (!_this._isDefined(item, searchProperty)) {
                         continue;
                     }
@@ -426,7 +424,7 @@
          */
             $this._highlight = function (text, keyword) {
                 return text.replace(
-                    new RegExp(keyword, (options.searchContain ? "ig" : "i")),
+                    new RegExp(keyword, (_options.searchContain ? "ig" : "i")),
                     '<span class="highlight">$&</span>'
                 );
             }
@@ -437,10 +435,10 @@
             $this._find = function (text, keyword) {
                 text = $this._normalizeString(text),
                 keyword = $this._normalizeString(keyword);
-                if (options.searchEqual) {
+                if (_options.searchEqual) {
                     return (text == keyword);
                 }
-                return (options.searchContain ? (text.indexOf(keyword) >= 0) : (text.indexOf(keyword) === 0));
+                return (_options.searchContain ? (text.indexOf(keyword) >= 0) : (text.indexOf(keyword) === 0));
             }
 
         /**
@@ -453,12 +451,12 @@
                 if ($this._selected()) {
                     $this._selected(false)._value('');
                 }
-                if (!options.groupBy) {
+                if (!_options.groupBy) {
                     $this._items(data, $ul);
                 } else {
                     Object.keys(data).forEach(function (groupName, index) {
                         var items = data[groupName],
-                            property = options.groupBy,
+                            property = _options.groupBy,
                             groupText = $this._getHighlight(items[0], property, groupName);
 
                         var $li = $('<li>')
@@ -482,7 +480,7 @@
                     var item = $(this).data('item');
                     if (item) {
                         $this._selected(true)._removeResults()._value(item);
-                        $this.trigger('select:flexdatalist', [item, options]);
+                        $this.trigger('select:flexdatalist', [item, _options]);
                     }
                 }).hover(function() {
                     $li.removeClass('active');
@@ -491,7 +489,7 @@
                     $(this).removeClass('active');
                 });
 
-                if (options.focusFirstResult) {
+                if (_options.focusFirstResult) {
                     $li.filter(':first').addClass('active');
                 }
 
@@ -503,7 +501,7 @@
          */
             $this._getResultsContainer = function () {
                 var $target = $this;
-                if (options.multiple) {
+                if (_options.multiple) {
                     $target = $ulMultiple;
                 }
                 var $container = $('ul.flexdatalist-results');
@@ -538,9 +536,9 @@
                     .data('item', item)
                     .addClass('item');
 
-                for (var index = 0; index < options.visibleProperties.length; index++) {
-                    var property = options.visibleProperties[index];
-                    if (options.groupBy && options.groupBy === property || !_this._isDefined(item, property)) {
+                for (var index = 0; index < _options.visibleProperties.length; index++) {
+                    var property = _options.visibleProperties[index];
+                    if (_options.groupBy && _options.groupBy === property || !_this._isDefined(item, property)) {
                         continue;
                     }
                     var $item = {};
@@ -601,7 +599,7 @@
                 var text = $this._getText(val);
                 var value = $this._getValue(val);
 
-                if (options.multiple) {
+                if (_options.multiple) {
                     if (val === '') {
                         return $this;
                     }
@@ -657,7 +655,7 @@
                     }
                 }
                 $this.val(value);
-                $this.trigger('change:flexdatalist', [value, text, options]);
+                $this.trigger('change:flexdatalist', [value, text, _options]);
                 return value;
             }
 
@@ -667,11 +665,11 @@
             $this._getText = function (item) {
                 var text = item;
                 if (_this._isObject(item)) {
-                    text = item[options.searchIn[0]];
-                    if (_this._isDefined(item, options.textProperty)) {
-                        text = item[options.textProperty];
+                    text = item[_options.searchIn[0]];
+                    if (_this._isDefined(item, _options.textProperty)) {
+                        text = item[_options.textProperty];
                     } else {
-                        text = $this._replacePlaceholders(item, options.textProperty, text);
+                        text = $this._replacePlaceholders(item, _options.textProperty, text);
                     }
                 }
                 return text;
@@ -684,15 +682,15 @@
             $this._getValue = function (item) {
                 var value = item;
                 if (_this._isObject(item)) {
-                    value = item[options.searchIn[0]];
-                    if (options.valueProperty === '*') {
+                    value = item[_options.searchIn[0]];
+                    if (_options.valueProperty === '*') {
                         value = item;
-                    } else if (_this._isDefined(item, options.valueProperty)) {
-                        value = item[options.valueProperty];
+                    } else if (_this._isDefined(item, _options.valueProperty)) {
+                        value = item[_options.valueProperty];
                     } else if ($this._toJSON()) {
                         var value = {},
-                            properties = options.valueProperty,
-                            textProperties = options.textProperty;
+                            properties = _options.valueProperty,
+                            textProperties = _options.textProperty;
 
                         // Add placeholder properties to list
                         if (textProperties) {
@@ -716,7 +714,7 @@
                         });
                     }
                 }
-                if (options.multiple && ($this._toJSON() || $this._toCSV())) {
+                if (_options.multiple && ($this._toJSON() || $this._toCSV())) {
                     var currentValue = $this._inputValue();
                     if (!_this._isEmpty(value) && _this._isObject(currentValue)) {
                         currentValue.push(value);
@@ -781,14 +779,14 @@
          * Check if input value must be a JSON string.
          */
             $this._toJSON = function () {
-                return _this._isObject(options.valueProperty) || options.valueProperty === '*';
+                return _this._isObject(_options.valueProperty) || _options.valueProperty === '*';
             }
 
         /**
          * Check if input value must be a CSV string.
          */
             $this._toCSV = function () {
-                return (!$this._toJSON() && options.multiple);
+                return (!$this._toJSON() && _options.multiple);
             }
 
         /**
@@ -807,7 +805,7 @@
          */
             $this._position = function () {
                 var $target = $_this;
-                if (options.multiple) {
+                if (_options.multiple) {
                     $target = $ulMultiple;
                 }
                 // Set some required CSS properties
