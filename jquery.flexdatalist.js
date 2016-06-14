@@ -1,10 +1,10 @@
 /**
  * jQuery Flexdatalist.
  * Autocomplete for input fields with support for datalists.
- * 
+ *
  * Version:
- * 1.0.4
- * 
+ * 1.1.0
+ *
  * Depends:
  * jquery.js 1.7+
  *
@@ -135,13 +135,37 @@
             var $this = $(this),
                 _cache = {},
                 _inputName = $this.attr('name');
+        /**
+         * Destroy.
+         */
+            $this.destroy = function () {
+                $this.removeClass('flexdatalist-set')
+                    .off()
+                    .attr('type', 'text')
+                    .next('.flexdatalist-alias')
+                    .remove();
+            }
+        /**
+         * Reset.
+         */
+            $this.reset = function () {
+                $this.destroy();
+            }
+
+            if (typeof options === 'string') {
+                $this[options]();
+                if (options === 'destroy') {
+                    return;
+                }
+            }
 
             if ($this.hasClass('flexdatalist-set')) {
                 return;
             }
             var _options = $.extend({
                 url: null,
-                data: null,
+                data: [],
+                params: {},
                 cache: true,
                 minLength: 2,
                 groupBy: false,
@@ -154,15 +178,16 @@
                 searchContain: false,
                 searchEqual: false
             }, options, $this.data());
-            
+
             _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
             _options.visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn : _options.visibleProperties;
             _options.multiple = $this.attr('multiple');
-            
+
             // Handle multiple values
             var $_this = $this
                     .clone(true)
                     .attr('name', null)
+                    .addClass('flexdatalist-alias')
                     .removeClass('flexdatalist');
             if (_options.multiple) {
                 var $ulMultiple = $('<ul>')
@@ -281,7 +306,7 @@
          * Get data.
          */
             $this._data = function (callback) {
-                if (_this._isObject(_options.data)) {
+                if (_this._isObject(_options.data) && Object.keys(_options.data).length > 0) {
                     callback(_options.data);
                     return;
                 } else if (typeof _options.data === 'string') {
@@ -307,7 +332,11 @@
 
                 $.ajax({
                     url: _options.url,
-                    data: {keyword: keywordTruncated, contain: _options.searchContain},
+                    data: $.extend(_options.params, {
+                            keyword: keywordTruncated,
+                            contain: _options.searchContain
+                        }
+                    ),
                     type: 'post',
                     dataType: 'json',
                     success: function (data) {
