@@ -17,7 +17,7 @@
  */
 (function($) {
     'use strict';
-    $.fn.flexdatalist = function(options) {
+    $.fn.flexdatalist = function(options, value) {
         var $document = $(document),
             _this = this;
 
@@ -162,6 +162,7 @@
             if ($this.hasClass('flexdatalist-set')) {
                 return;
             }
+
             var _options = $.extend({
                 url: null,
                 data: [],
@@ -176,11 +177,14 @@
                 visibleProperties: [],
                 searchIn: ['label'],
                 searchContain: false,
-                searchEqual: false
+                searchEqual: false,
+                normalizeString: null,
+                filter: null
             }, options, $this.data());
 
             _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
             _options.visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn : _options.visibleProperties;
+            _options.textProperty = _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
             _options.multiple = $this.attr('multiple');
 
             // Handle multiple values
@@ -247,9 +251,7 @@
                 })
                 .attr('autocomplete', 'off');
 
-                $this
-                    .addClass('flexdatalist-set')
-                    .trigger('init:flexdatalist', [_options]);
+                $this.addClass('flexdatalist-set');
 
                 window.onresize = function(event) {
                     $this._position();
@@ -334,7 +336,8 @@
                     url: _options.url,
                     data: $.extend(_options.params, {
                             keyword: keywordTruncated,
-                            contain: _options.searchContain
+                            contain: _options.searchContain,
+                            value: $this.val()
                         }
                     ),
                     type: 'post',
@@ -440,8 +443,8 @@
                         continue;
                     }
                     var propertyValue = item[searchProperty];
-                    if ($this._find(propertyValue, keyword)) {
-                        item[searchProperty + '_highlight'] = $this._highlight(propertyValue, keyword);
+                    if ($this._find(keyword, propertyValue, item)) {
+                        item[searchProperty + '_highlight'] = $this._highlight(keyword, propertyValue);
                         hasMatches = true;
                     }
                 }
@@ -449,9 +452,9 @@
             }
 
         /**
-         * Wrap found keyword with span.highlight
+         * Wrap found keyword with span.highlight.
          */
-            $this._highlight = function (text, keyword) {
+            $this._highlight = function (keyword, text) {
                 return text.replace(
                     new RegExp(keyword, (_options.searchContain ? "ig" : "i")),
                     '<span class="highlight">$&</span>'
@@ -461,9 +464,12 @@
         /**
          * Search for keyword in string.
          */
-            $this._find = function (text, keyword) {
+            $this._find = function (keyword, text, item) {
                 text = $this._normalizeString(text),
                 keyword = $this._normalizeString(keyword);
+                if (typeof _options.filter === 'function') {
+                    return _options.filter(item, keyword, text);
+                }
                 if (_options.searchEqual) {
                     return (text == keyword);
                 }
@@ -706,7 +712,7 @@
 
         /**
          * Get the value that will be added to hidden input.
-         * This is the value that will go with the form submittion.
+         * This is the value that eventually will be sent on form submittion.
          */
             $this._getValue = function (item) {
                 var value = item;
@@ -792,6 +798,9 @@
          */
             $this._normalizeString = function (string) {
                 if (typeof string === 'string') {
+                    if (typeof _options.normalizeString === 'function') {
+                        string = _options.normalizeString(string);
+                    }
                     return string.toUpperCase();
                 }
                 return string;
@@ -849,5 +858,5 @@
             $this._initValue();
         });
     }
-    $('.flexdatalist').flexdatalist();
+    $('input.flexdatalist').flexdatalist();
 })(jQuery);
