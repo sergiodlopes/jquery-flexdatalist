@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.1.0
+ * 1.3.0
  *
  * Depends:
  * jquery.js 1.7+
@@ -167,6 +167,8 @@
                 url: null,
                 data: [],
                 params: {},
+                relatives: null,
+                chainedRelatives: false,
                 cache: true,
                 minLength: 2,
                 groupBy: false,
@@ -178,15 +180,15 @@
                 searchIn: ['label'],
                 searchContain: false,
                 searchEqual: false,
-                normalizeString: null,
-                filter: null
+                normalizeString: null
             }, options, $this.data());
 
             _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
             _options.visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn : _options.visibleProperties;
             _options.textProperty = _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
             _options.multiple = $this.attr('multiple');
-
+            _options.relatives = _options.relatives && $(_options.relatives).length > 0 ? $(_options.relatives) : null;
+ 
             // Handle multiple values
             var $_this = $this
                     .clone(true)
@@ -217,6 +219,8 @@
          * Initialize.
          */
             $this._init = function () {
+                // Handle chained fields
+                $this._chained();
                 // Set datalist data
                 $this._datalist();
                 // Listen to parent input key presses and state events.
@@ -256,6 +260,29 @@
                 window.onresize = function(event) {
                     $this._position();
                 };
+            }
+
+        /**
+         * Check chained relatives.
+         */
+            $this._chained = function () {
+                if (!_options.relatives || !_options.chainedRelatives) {
+                    return;
+                }
+                var toggle = function () {
+                    _options.relatives.each(function () {
+                        var empty = $.trim($(this).val()) === '';
+                        $_this.prop('disabled', empty);
+                        if (empty) {
+                            $this._value('');
+                            $_this.val('');
+                        }
+                    });
+                }
+                _options.relatives.on('change', function () {
+                    toggle();
+                });
+                toggle();                
             }
 
         /**
@@ -334,10 +361,10 @@
 
                 $.ajax({
                     url: _options.url,
-                    data: $.extend(_options.params, {
+                    data: $.extend($this._relativesData(), _options.params, {
                             keyword: keywordTruncated,
                             contain: _options.searchContain,
-                            value: $this.val()
+                            selected: $this.val()
                         }
                     ),
                     type: 'post',
@@ -360,6 +387,21 @@
                 });
             }
 
+        /**
+         * Get data.
+         */
+            $this._relativesData = function () {
+                var data = {};
+                if (_options.relatives) {
+                    data['relatives'] = {};
+                    _options.relatives.each(function () {
+                        var $input = $(this);
+                        data['relatives'][$input.attr('name')] = $input.val();
+                    });
+                }
+                return data;
+            }
+            
         /**
          * Set datalist data, if exists.
          */
@@ -467,9 +509,6 @@
             $this._find = function (keyword, text, item) {
                 text = $this._normalizeString(text),
                 keyword = $this._normalizeString(keyword);
-                if (typeof _options.filter === 'function') {
-                    return _options.filter(item, keyword, text);
-                }
                 if (_options.searchEqual) {
                     return (text == keyword);
                 }
@@ -690,7 +729,7 @@
                     }
                 }
                 $this.val(value);
-                $this.trigger('change:flexdatalist', [value, text, _options]);
+                $this.trigger('change:flexdatalist', [value, text, _options]).trigger('change');
                 return value;
             }
 
