@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.1
+ * 1.4.2
  *
  * Depends:
  * jquery.js 1.7+
@@ -221,10 +221,6 @@
          * Initialize.
          */
             $this._init = function () {
-                // Handle chained fields
-                $this._chained();
-                // Set datalist data
-                $this._datalist();
                 // Listen to parent input key presses and state events.
                 $_this.on('input keyup', function (event) {
                     var val = $this._keyword();
@@ -282,13 +278,12 @@
                 if (!_options.relatives || !_options.chainedRelatives) {
                     return;
                 }
-                var toggle = function () {
+                var toggle = function (init) {
                     _options.relatives.each(function () {
-                        var emptyRelative = _this._isEmpty($(this).val()),
-                            empty = _this._isEmpty($_this.val());
-                            
-                        $_this.prop('disabled', emptyRelative);
-                        if (emptyRelative || !empty) {
+                        var disabled = _this._isEmpty($(this).val()),
+                            empty = _this._isEmpty($_this.val());                            
+                        $_this.prop('disabled', disabled);
+                        if (!init && (disabled || !empty)) {
                             $this._value('');
                             $_this.val('');
                         }
@@ -298,7 +293,7 @@
                     toggle();
                     _cache = {};
                 });
-                toggle();                
+                toggle(true);
             }
 
         /**
@@ -913,8 +908,14 @@
                     'z-index': ($target.css('z-index') + 1)
                 });
             }
+            // Set datalist data
+            $this._datalist();
+            // Initialize
             $this._init();
+            // Process default value
             $this._initValue();
+            // Handle chained fields
+            $this._chained();
         });
     }
     $('input.flexdatalist').flexdatalist();
