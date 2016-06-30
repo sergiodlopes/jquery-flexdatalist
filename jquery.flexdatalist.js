@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.3.0
+ * 1.4.0
  *
  * Depends:
  * jquery.js 1.7+
@@ -25,8 +25,9 @@
         if (!$document.data('flexdatalist')) {
             // Remove results on outside click
             $(document).mouseup(function (event) {
-                var $container = $('.flexdatalist-results');
-                if (!$container.is(event.target) && $container.has(event.target).length === 0) {
+                var $container = $('.flexdatalist-results'),
+                    $target = $container.data('target');
+                if ((!$target || !$target.is(':focus')) && !$container.is(event.target) && $container.has(event.target).length === 0) {
                     $container.remove();
                 }
             // Keyboard navigation
@@ -170,7 +171,7 @@
                 relatives: null,
                 chainedRelatives: false,
                 cache: true,
-                minLength: 2,
+                minLength: 0,
                 groupBy: false,
                 selectionRequired: false,
                 focusFirstResult: false,
@@ -180,7 +181,8 @@
                 searchIn: ['label'],
                 searchContain: false,
                 searchEqual: false,
-                normalizeString: null
+                normalizeString: null,
+                maxShownResults: 100
             }, options, $this.data());
 
             _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
@@ -244,9 +246,20 @@
                         }
                     }
                 }).on('input keydown', function (event) {
+                    // Comma separated values
                     if (_this._keyNum(event) === 188 && !_options.selectionRequired && _options.multiple) {
                         event.preventDefault();
                         $this._value($this._keyword());
+                    }
+                }).focus(function () {
+                    if (_options.minLength === 0) {
+                        if ($this._keyword() === '') {
+                            $this._data(function (data) {
+                                $this._showResults(data);
+                            });
+                        } else {
+                            $_this.trigger('keyup');
+                        }
                     }
                 }).blur(function () {
                     if (_options.selectionRequired && !$this._selected()) {
@@ -588,7 +601,7 @@
                             'border-width': '1px',
                             'border-bottom-left-radius': $target.css("border-bottom-left-radius"),
                             'border-bottom-right-radius': $target.css("border-bottom-right-radius")
-                        });
+                        }).data('target', $_this);
                 }
                 return $container;
             }
@@ -597,7 +610,11 @@
          * Items iteration.
          */
             $this._items = function (items, $ul) {
-                for (var index = 0; index < items.length; index++) {
+                var max = _options.maxShownResults;
+                for (var index = 0; index < items.length; index++) {                    
+                    if (max > 0 && max === index) {
+                        break;
+                    }
                     $this._item(items[index]).appendTo($ul);
                 }
             }
