@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.0
+ * 1.4.1
  *
  * Depends:
  * jquery.js 1.7+
@@ -105,7 +105,7 @@
                 return true;
             } else if (this._isObject(value) && Object.keys(value).length === 0) {
                 return true;
-            } else if (value === '') {
+            } else if ($.trim(value) === '') {
                 return true;
             }
             return false;
@@ -284,11 +284,14 @@
                 }
                 var toggle = function () {
                     _options.relatives.each(function () {
-                        var empty = $.trim($(this).val()) === '';
-                        $_this.prop('disabled', empty);
-                        if (empty) {
+                        var emptyRelative = _this._isEmpty($(this).val()),
+                            empty = _this._isEmpty($_this.val());
+                            
+                        $_this.prop('disabled', emptyRelative);
+                        if (emptyRelative || !empty) {
                             $this._value('');
                             $_this.val('');
+                            _cache = {};
                         }
                     });
                 }
@@ -392,7 +395,7 @@
                             callback(_data);
                             if (typeof _options.data === 'string') {
                                 _options.data = data;
-                            } else if (_options.url) {
+                            } else if (_options.url && !_this._isEmpty(_data)) {
                                 $this._cache(keywordTruncated, _data);
                             }
                         }
