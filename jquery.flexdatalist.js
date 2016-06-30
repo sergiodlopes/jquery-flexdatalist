@@ -291,12 +291,12 @@
                         if (emptyRelative || !empty) {
                             $this._value('');
                             $_this.val('');
-                            _cache = {};
                         }
                     });
                 }
                 _options.relatives.on('change', function () {
                     toggle();
+                    _cache = {};
                 });
                 toggle();                
             }
