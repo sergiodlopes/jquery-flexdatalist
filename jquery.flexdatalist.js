@@ -171,7 +171,7 @@
                 relatives: null,
                 chainedRelatives: false,
                 cache: true,
-                minLength: 0,
+                minLength: 2,
                 groupBy: false,
                 selectionRequired: false,
                 focusFirstResult: false,
