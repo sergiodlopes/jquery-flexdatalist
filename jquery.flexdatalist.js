@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.2
+ * 1.4.1
  *
  * Depends:
  * jquery.js 1.7+
@@ -291,12 +291,12 @@
                         if (emptyRelative || !empty) {
                             $this._value('');
                             $_this.val('');
+                            _cache = {};
                         }
                     });
                 }
                 _options.relatives.on('change', function () {
                     toggle();
-                    _cache = {};
                 });
                 toggle();                
             }
