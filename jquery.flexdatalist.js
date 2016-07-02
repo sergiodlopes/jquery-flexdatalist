@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.2
+ * 1.4.3
  *
  * Depends:
  * jquery.js 1.7+
@@ -281,11 +281,14 @@
                 var toggle = function (init) {
                     _options.relatives.each(function () {
                         var disabled = _this._isEmpty($(this).val()),
-                            empty = _this._isEmpty($_this.val());                            
+                            empty = _this._isEmpty($this.val());                            
                         $_this.prop('disabled', disabled);
                         if (!init && (disabled || !empty)) {
                             $this._value('');
                             $_this.val('');
+                            if (_options.multiple) {
+                                $ulMultiple.find('li .remove').click();
+                            }
                         }
                     });
                 }
