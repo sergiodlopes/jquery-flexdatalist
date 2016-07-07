@@ -699,10 +699,10 @@
                     var $li = $('<li>')
                         .addClass('value')
                         .append('<span class="text">' + text + '</span>')
-                        .append('<span class="remove">&times;</span>')
+                        .append('<span class="fdl-remove">&times;</span>')
                         .insertBefore($ulMultiple.find('li.input-container'));
 
-                    $li.find('span.remove').click(function () {
+                    $li.find('span.fdl-remove').click(function () {
                         var $container = $(this).parent();
                         if ($this._toJSON() || $this._toCSV()) {
                             var currentValue = $this._inputValue();

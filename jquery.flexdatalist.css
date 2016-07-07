@@ -93,7 +93,7 @@
 }
 .flexdatalist-multiple li.value span {
 }
-.flexdatalist-multiple li.value span.remove {
+.flexdatalist-multiple li.value span.fdl-remove {
     font-weight: 700;
     padding: 0 5px;
     font-size: 20px;
@@ -104,6 +104,6 @@
     right: 0;
     opacity: 0.70;
 }
-.flexdatalist-multiple li.value span.remove:hover {
+.flexdatalist-multiple li.value span.fdl-remove:hover {
     opacity: 1;
 }
