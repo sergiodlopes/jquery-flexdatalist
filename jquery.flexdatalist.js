@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.4
+ * 1.4.5
  *
  * Depends:
  * jquery.js 1.7+
@@ -228,7 +228,7 @@
                         return;
                     }
                     if (val.length >= _options.minLength) {
-                        $this._search(val, function (results) {
+                        $this._search(function (results) {
                             $this._showResults(results);
                         });
                     } else {
@@ -330,13 +330,13 @@
                         var _searchIn = _options.searchIn;
                         _options.searchIn = _options.valueProperty.split(',');
                         _options.searchEqual = true;
-                        $this._search(values, function (results, matches) {
+                        $this._search(function (results, matches) {
                             if (matches.length > 0) {
                                 callback(matches);
                             }
                             _options.searchIn = _searchIn;
                             _options.searchEqual = false;
-                        });
+                        }, values);
                     } else {
                         callback(values);
                     }
@@ -376,7 +376,7 @@
                 $.ajax({
                     url: _options.url,
                     data: $.extend($this._relativesData(), _options.params, {
-                            keyword: keywordTruncated,
+                            keyword: keyword,
                             contain: _options.searchContain,
                             selected: $this.val()
                         }
@@ -454,13 +454,17 @@
         /**
          * Search for keywords in data and return matches.
          */
-            $this._search = function (keywords, callback) {
-                if (typeof keywords === 'string') {
-                    keywords = [keywords];
-                }
+            $this._search = function (callback, keywords) {
                 $this._data(function (data) {
                     var results = [],
                         matches = [];
+                    
+                    if (!_this._isDefined(keywords)) {
+                        keywords = $this._keyword();
+                    }
+                    if (typeof keywords === 'string') {
+                        keywords = [keywords];
+                    }
                     var groupProperty = _options.groupBy;
                     for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                         var keyword = keywords[kwindex];
