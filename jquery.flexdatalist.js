@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.3
+ * 1.4.4
  *
  * Depends:
  * jquery.js 1.7+
@@ -92,7 +92,7 @@
      */
         this._ignoreKey = function (event) {
             var keynum = _this._keyNum(event);
-            return keynum === 0 || keynum === 13 || keynum === 38 || keynum === 40;
+            return keynum === 0 || keynum === 13 || keynum === 37 || keynum === 38 || keynum === 39 || keynum === 40;
         }
 
     /**
@@ -194,7 +194,7 @@
             // Handle multiple values
             var $_this = $this
                     .clone(true)
-                    .attr('name', null)
+                    .attr({'list': null, 'name': null})
                     .addClass('flexdatalist-alias')
                     .removeClass('flexdatalist');
             if (_options.multiple) {
@@ -422,7 +422,6 @@
             $this._datalist = function () {
                 var list = $this.attr('list');
                 if (!_this._isEmpty(list)) {
-                    $_this.attr('list', null);
                     _options.data = [];
                     $('#' + list).find('option').each(function() {
                         var val = $(this).val();
