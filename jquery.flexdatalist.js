@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.5
+ * 1.4.6
  *
  * Depends:
  * jquery.js 1.7+
@@ -88,14 +88,6 @@
         }
 
     /**
-     * Position results below parent element.
-     */
-        this._ignoreKey = function (event) {
-            var keynum = _this._keyNum(event);
-            return keynum === 0 || keynum === 13 || keynum === 37 || keynum === 38 || keynum === 39 || keynum === 40;
-        }
-
-    /**
      * Is variable empty.
      */
         this._isEmpty = function (value) {
@@ -135,6 +127,7 @@
         return this.each(function() {
             var $this = $(this),
                 _cache = {},
+                _currentValue = '',
                 _inputName = $this.attr('name');
         /**
          * Destroy.
@@ -193,7 +186,7 @@
  
             // Handle multiple values
             var $_this = $this
-                    .clone(true)
+                    .clone(false)
                     .attr({'list': null, 'name': null})
                     .addClass('flexdatalist-alias')
                     .removeClass('flexdatalist');
@@ -222,31 +215,33 @@
          */
             $this._init = function () {
                 // Listen to parent input key presses and state events.
-                $_this.on('input keyup', function (event) {
+                $_this.on('input keydown', function (event) {
                     var val = $this._keyword();
-                    if (_this._ignoreKey(event)) {
-                        return;
-                    }
-                    if (val.length >= _options.minLength) {
-                        $this._search(function (results) {
-                            $this._showResults(results);
-                        });
-                    } else {
-                        $this._removeResults();
-                    }
-                    if (!_options.multiple) {
-                        if (!_options.selectionRequired) {
-                            $this._value(val);
-                        } else if (val.length === 0 || !$this._selected()) {
-                            $this._value('');
-                        }
-                    }
-                }).on('input keydown', function (event) {
                     // Comma separated values
                     if (_this._keyNum(event) === 188 && !_options.selectionRequired && _options.multiple) {
                         event.preventDefault();
-                        $this._value($this._keyword());
+                        $this._value(val);
+                        $this._removeResults();
                     }
+                }).on('input keyup', function (event) {
+                    if ($this._changed() && _this._keyNum(event) !== 13) {
+                        var val = $this._keyword();
+                        if (val.length >= _options.minLength) {
+                            $this._search(function (results) {
+                                $this._showResults(results);
+                            });
+                        } else {
+                            $this._removeResults();
+                        }
+                        if (!_options.multiple) {
+                            if (!_options.selectionRequired) {
+                                $this._value(val);
+                            } else if (val.length === 0 || !$this._selected()) {
+                                $this._value('');
+                            }
+                        }
+                    }
+                    _currentValue = $_this.val();
                 }).focus(function () {
                     if (_options.minLength === 0) {
                         if ($this._keyword() === '') {
@@ -269,6 +264,13 @@
                 window.onresize = function(event) {
                     $this._position();
                 };
+            }
+        
+        /**
+         * Check if visible field's value has changed.
+         */
+            $this._changed = function () {
+                return _currentValue !== $_this.val();
             }
 
         /**
@@ -313,6 +315,7 @@
                         $this.val('');
                         $this._values(values);
                     }
+                    _currentValue = $_this.val();
                 });
             }
 
@@ -714,10 +717,11 @@
                         }
                         $container.remove();
                     });
-                } else if (text) {
+                } else if (text && text !== $_this.val()) {
                     $_this.val(text);
                 }
                 $this._inputValue(value, text);
+                _currentValue = $_this.val();
                 return $this;
             }
 
@@ -922,6 +926,7 @@
             $this._initValue();
             // Handle chained fields
             $this._chained();
+            _currentValue = $_this.val();
         });
     }
     $('input.flexdatalist').flexdatalist();

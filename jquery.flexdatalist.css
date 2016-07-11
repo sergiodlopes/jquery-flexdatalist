@@ -77,7 +77,7 @@
 .flexdatalist-multiple li.input-container,
 .flexdatalist-multiple li.input-container input {
     border: none;
-    width: 320px;
+    width: 95%;
 }
 .flexdatalist-multiple li.input-container input {
     height: auto;
