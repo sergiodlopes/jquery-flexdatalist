@@ -95,7 +95,9 @@
                 return true;
             } else if (value === null) {
                 return true;
-            } else if (this._isObject(value) && Object.keys(value).length === 0) {
+            } else if (value === true) {
+                return false;
+            } else if (this._length(value) === 0) {
                 return true;
             } else if ($.trim(value) === '') {
                 return true;
@@ -110,6 +112,17 @@
             return (value && typeof value === 'object')
         }
 
+    /**
+     * Get length of variable.
+     */
+        this._length = function (value) {
+            if (this._isObject(value)) {
+                return Object.keys(value).length;
+            } else if (typeof value.length === 'number') {
+                return value.length;
+            }
+            return 0;
+        }
     /**
      * Check if variable (and optionally property) is defined.
      */
@@ -127,7 +140,7 @@
         return this.each(function() {
             var $this = $(this),
                 _cache = {},
-                _currentValue = '',
+                _previousText = '',
                 _inputName = $this.attr('name');
         /**
          * Destroy.
@@ -156,7 +169,7 @@
             if ($this.hasClass('flexdatalist-set')) {
                 return;
             }
-
+            
             var _options = $.extend({
                 url: null,
                 data: [],
@@ -241,7 +254,7 @@
                             }
                         }
                     }
-                    _currentValue = $_this.val();
+                    _previousText = $this._keyword();
                 }).focus(function () {
                     if (_options.minLength === 0) {
                         if ($this._keyword() === '') {
@@ -267,10 +280,10 @@
             }
         
         /**
-         * Check if visible field's value has changed.
+         * Check if field's text has changed.
          */
             $this._changed = function () {
-                return _currentValue !== $_this.val();
+                return _previousText !== $this._keyword();
             }
 
         /**
@@ -309,13 +322,12 @@
                 if (_this._isEmpty(value)) {
                     return;
                 }
-
                 $this._parseValue(value, function (values) {
                     if (!_this._isEmpty(values)) {
                         $this.val('');
                         $this._values(values);
                     }
-                    _currentValue = $_this.val();
+                    _previousText = $this._keyword();
                 });
             }
 
@@ -352,15 +364,15 @@
          * Get data.
          */
             $this._data = function (callback) {
-                if (_this._isObject(_options.data) && Object.keys(_options.data).length > 0) {
+                if (_this._isObject(_options.data) && !_this._isEmpty(_options.data)) {
                     callback(_options.data);
                     return;
                 } else if (typeof _options.data === 'string') {
                     _options.url = _options.data;
-                } else if (!_options.url && !_options.data) {
+                } else if (_this._isEmpty(_options.url) && _this._isEmpty(_options.data)) {
                     return;
                 }
-
+                
                 var keyword = $this._keyword(),
                     keywordTruncated = keyword.substring(0, _options.minLength),
                     cachedData = $this._cache(keywordTruncated);
@@ -395,8 +407,8 @@
                         if (_this._isObject(_data)) {
                             callback(_data);
                             if (typeof _options.data === 'string') {
-                                _options.data = data;
-                            } else if (_options.url && !_this._isEmpty(_data)) {
+                                _options.data = _data;
+                            } else if (!_this._isEmpty(_options.url) && !_this._isEmpty(_data)) {
                                 $this._cache(keywordTruncated, _data);
                             }
                         }
@@ -681,7 +693,7 @@
          * Set multiple values.
          */
             $this._values = function (values) {
-                if (_this._isObject(values) && _this._isDefined(values) && values.length > 0) {
+                if ($.isArray(values) && !_this._isEmpty(values)) {
                     $.each(values, function (i, value) {
                         $this._value(value);
                     });
@@ -696,7 +708,7 @@
             $this._value = function (val) {
                 var text = $this._getText(val);
                 var value = $this._getValue(val);
-
+                
                 if (_options.multiple) {
                     if (val === '') {
                         return $this;
@@ -721,7 +733,7 @@
                     $_this.val(text);
                 }
                 $this._inputValue(value, text);
-                _currentValue = $_this.val();
+                _previousText = $this._keyword();
                 return $this;
             }
 
@@ -918,6 +930,7 @@
                     'z-index': ($target.css('z-index') + 1)
                 });
             }
+            
             // Set datalist data
             $this._datalist();
             // Initialize
@@ -926,7 +939,7 @@
             $this._initValue();
             // Handle chained fields
             $this._chained();
-            _currentValue = $_this.val();
+            _previousText = $this._keyword();
         });
     }
     $('input.flexdatalist').flexdatalist();
