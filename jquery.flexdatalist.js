@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.6
+ * 1.4.7
  *
  * Depends:
  * jquery.js 1.7+
@@ -21,6 +21,13 @@
         var $document = $(document),
             _this = this;
 
+    /**
+     * Get key code from event.
+     */
+        this._keyNum = function (event) {
+            return event.which || event.keyCode;
+        }
+
         // Handle selection list keyboard shortcuts and events.
         if (!$document.data('flexdatalist')) {
             // Remove results on outside click
@@ -37,7 +44,7 @@
                     $active = $li.filter('.active'),
                     index = $active.index(),
                     length = $li.length,
-                    keynum = event.keyCode || event.which;
+                    keynum = _this._keyNum(event);
 
                 if (length === 0) {
                     return;
@@ -78,13 +85,6 @@
             $ul.animate({
                 scrollTop: position + $ul.scrollTop()
             }, 100);
-        }
-
-    /**
-     * Get key code from event.
-     */
-        this._keyNum = function (event) {
-            return event.which || event.keyCode;
         }
 
     /**
@@ -148,8 +148,9 @@
             $this.destroy = function () {
                 $this.removeClass('flexdatalist-set')
                     .off()
+                    .val('')
                     .attr('type', 'text')
-                    .next('.flexdatalist-alias')
+                    .next('.flexdatalist-alias, ul.flexdatalist-multiple')
                     .remove();
             }
         /**
