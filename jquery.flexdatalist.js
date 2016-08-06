@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.4.7
+ * 1.5.0
  *
  * Depends:
  * jquery.js 1.7+
@@ -19,7 +19,45 @@
     'use strict';
     $.fn.flexdatalist = function(options, value) {
         var $document = $(document),
+            $input = $(this),
             _this = this;
+
+    /**
+     * Destroy.
+     */
+        this._destroy = function () {
+            $input.removeClass('flexdatalist-set')
+                .data('flexdatalist', null)
+                .off()
+                .val('')
+                .attr('type', 'text')
+                .next('.flexdatalist-alias, ul.flexdatalist-multiple')
+                .remove();
+            return false;
+        }
+        
+    /**
+     * Reset.
+     */
+        this._reset = function () {
+            this._destroy();
+        }
+        
+    /**
+     * Handle options.
+     */
+        if (typeof options === 'string') {
+            if (typeof this['_' + options] === 'function') {
+                if (!this['_' + options]()) {
+                    return;
+                }
+            } else if (value) {
+                var _data = $input.data('flexdatalist');
+                _data[options] = value;
+                $input.data('flexdatalist', _data);
+                return;
+            }
+        }
 
     /**
      * Get key code from event.
@@ -72,19 +110,14 @@
                             $active = $li.removeClass('active').filter('.item:last').addClass('active');
                         }
                     }
-                    _this._scrollTo($ul, $active);
+                    
+                    // Scroll to
+                    var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
+                    $ul.animate({
+                        scrollTop: position + $ul.scrollTop()
+                    }, 100);
                 }
             }).data('flexdatalist', true);
-        }
-
-    /**
-     * Simple scrollto element utility function.
-     */
-        this._scrollTo = function ($ul, $active) {
-            var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
-            $ul.animate({
-                scrollTop: position + $ul.scrollTop()
-            }, 100);
         }
 
     /**
@@ -142,61 +175,64 @@
                 _cache = {},
                 _previousText = '',
                 _inputName = $this.attr('name');
-        /**
-         * Destroy.
-         */
-            $this.destroy = function () {
-                $this.removeClass('flexdatalist-set')
-                    .off()
-                    .val('')
-                    .attr('type', 'text')
-                    .next('.flexdatalist-alias, ul.flexdatalist-multiple')
-                    .remove();
-            }
-        /**
-         * Reset.
-         */
-            $this.reset = function () {
-                $this.destroy();
-            }
-
-            if (typeof options === 'string') {
-                $this[options]();
-                if (options === 'destroy') {
-                    return;
-                }
-            }
-
+            
             if ($this.hasClass('flexdatalist-set')) {
                 return;
             }
-            
-            var _options = $.extend({
-                url: null,
-                data: [],
-                params: {},
-                relatives: null,
-                chainedRelatives: false,
-                cache: true,
-                minLength: 2,
-                groupBy: false,
-                selectionRequired: false,
-                focusFirstResult: false,
-                textProperty: null,
-                valueProperty: null,
-                visibleProperties: [],
-                searchIn: ['label'],
-                searchContain: false,
-                searchEqual: false,
-                normalizeString: null,
-                maxShownResults: 100
-            }, options, $this.data());
 
-            _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
-            _options.visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn : _options.visibleProperties;
-            _options.textProperty = _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
-            _options.multiple = $this.attr('multiple');
-            _options.relatives = _options.relatives && $(_options.relatives).length > 0 ? $(_options.relatives) : null;
+        /**
+         * Option management.
+         */
+            $this._options = function (option, value) {
+                var _options = $this.data('flexdatalist');
+                if (!_this._isDefined(option)) {
+                    return $this.data('flexdatalist');
+                } else if (_this._isDefined(value)) {
+                    _options[option] = value;
+                } else if (!_this._isObject(option)) {
+                    return (_this._isDefined(_options, option) ? _options[option] : null);
+                } else {
+                    _options = option;
+                }
+                
+                _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
+                _options.relatives = _options.relatives && $(_options.relatives).length > 0 ? $(_options.relatives) : null;
+               
+                $this.data('flexdatalist', _options);
+                _cache = {};
+                return $this;
+            }
+        
+        /**
+         * Get text property.
+         */
+            $this._textProperty = function () {
+                var _options = $this._options();
+                return _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
+            }
+
+            $this._options($.extend({
+                    url: null,
+                    data: [],
+                    params: {},
+                    relatives: null,
+                    chainedRelatives: false,
+                    cache: true,
+                    minLength: 2,
+                    groupBy: false,
+                    selectionRequired: false,
+                    focusFirstResult: false,
+                    textProperty: null,
+                    valueProperty: null,
+                    visibleProperties: [],
+                    searchIn: ['label'],
+                    searchContain: false,
+                    searchEqual: false,
+                    normalizeString: null,
+                    multiple: $this.attr('multiple'),
+                    maxShownResults: 100
+                }, options, $this.data()
+            ));
  
             // Handle multiple values
             var $_this = $this
@@ -204,7 +240,7 @@
                     .attr({'list': null, 'name': null})
                     .addClass('flexdatalist-alias')
                     .removeClass('flexdatalist');
-            if (_options.multiple) {
+            if ($this._options('multiple')) {
                 var $ulMultiple = $('<ul>')
                     .addClass('flexdatalist-multiple')
                     .css({
@@ -228,6 +264,7 @@
          * Initialize.
          */
             $this._init = function () {
+                var _options = $this._options();
                 // Listen to parent input key presses and state events.
                 $_this.on('input keydown', function (event) {
                     var val = $this._keyword();
@@ -291,6 +328,7 @@
          * Check chained relatives.
          */
             $this._chained = function () {
+                var _options = $this._options();
                 if (!_options.relatives || !_options.chainedRelatives) {
                     return;
                 }
@@ -336,6 +374,7 @@
          * Parse initial value.
          */
             $this._parseValue = function (data, callback) {
+                var _options = $this._options();
                 if ($this._toJSON()) {
                     try {
                         callback(JSON.parse(data));
@@ -365,11 +404,14 @@
          * Get data.
          */
             $this._data = function (callback) {
+                var _options = $this._options(),
+                    url = _options.url;
+
                 if (_this._isObject(_options.data) && !_this._isEmpty(_options.data)) {
                     callback(_options.data);
                     return;
                 } else if (typeof _options.data === 'string') {
-                    _options.url = _options.data;
+                   url = _options.data;
                 } else if (_this._isEmpty(_options.url) && _this._isEmpty(_options.data)) {
                     return;
                 }
@@ -390,7 +432,7 @@
                 $this.addClass('flexdatalist-loading');
 
                 $.ajax({
-                    url: _options.url,
+                    url: url,
                     data: $.extend($this._relativesData(), _options.params, {
                             keyword: keyword,
                             contain: _options.searchContain,
@@ -421,10 +463,11 @@
          * Get data.
          */
             $this._relativesData = function () {
-                var data = {};
-                if (_options.relatives) {
+                var relatives = $this._options('relatives'),
+                    data = {};
+                if (relatives) {
                     data['relatives'] = {};
-                    _options.relatives.each(function () {
+                    relatives.each(function () {
                         var $input = $(this);
                         data['relatives'][$input.attr('name')] = $input.val();
                     });
@@ -436,7 +479,8 @@
          * Set datalist data, if exists.
          */
             $this._datalist = function () {
-                var list = $this.attr('list');
+                var _options = $this._options(),
+                    list = $this.attr('list');
                 if (!_this._isEmpty(list)) {
                     _options.data = [];
                     $('#' + list).find('option').each(function() {
@@ -454,7 +498,7 @@
          * Cached data.
          */
             $this._cache = function (key, data) {
-                if (_options.cache) {
+                if ($this._options('cache')) {
                     key = $this._normalizeString(key);
                     if (!_this._isDefined(data)) {
                         if (_this._isDefined(_cache, key)) {
@@ -481,7 +525,7 @@
                     if (typeof keywords === 'string') {
                         keywords = [keywords];
                     }
-                    var groupProperty = _options.groupBy;
+                    var groupProperty = $this._options('groupBy');
                     for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                         var keyword = keywords[kwindex];
                         for (var index = 0; index < data.length; index++) {
@@ -511,9 +555,11 @@
          * Match against searchable properties.
          */
             $this._matches = function (item, keyword) {
-                var hasMatches = false;
-                for (var index = 0; index < _options.searchIn.length; index++) {
-                    var searchProperty = _options.searchIn[index];
+                var hasMatches = false,
+                    searchIn = $this._options('searchIn');
+
+                for (var index = 0; index < searchIn.length; index++) {
+                    var searchProperty = searchIn[index];
                     if (!_this._isDefined(item, searchProperty)) {
                         continue;
                     }
@@ -531,7 +577,7 @@
          */
             $this._highlight = function (keyword, text) {
                 return text.replace(
-                    new RegExp(keyword, (_options.searchContain ? "ig" : "i")),
+                    new RegExp(keyword, ($this._options('searchContain') ? "ig" : "i")),
                     '<span class="highlight">$&</span>'
                 );
             }
@@ -540,6 +586,7 @@
          * Search for keyword in string.
          */
             $this._find = function (keyword, text, item) {
+                var _options = $this._options();
                 text = $this._normalizeString(text),
                 keyword = $this._normalizeString(keyword);
                 if (_options.searchEqual) {
@@ -553,8 +600,9 @@
          */
             $this._showResults = function (data) {
                 $this._removeResults();
+                var $ul = $this._getResultsContainer(),
+                    _options = $this._options();
 
-                var $ul = $this._getResultsContainer();
                 if ($this._selected()) {
                     $this._selected(false)._value('');
                 }
@@ -608,7 +656,7 @@
          */
             $this._getResultsContainer = function () {
                 var $target = $this;
-                if (_options.multiple) {
+                if ($this._options('multiple')) {
                     $target = $ulMultiple;
                 }
                 var $container = $('ul.flexdatalist-results');
@@ -630,7 +678,7 @@
          * Items iteration.
          */
             $this._items = function (items, $ul) {
-                var max = _options.maxShownResults;
+                var max = $this._options('maxShownResults');
                 for (var index = 0; index < items.length; index++) {                    
                     if (max > 0 && max === index) {
                         break;
@@ -644,11 +692,13 @@
          */
             $this._item = function (item) {
                 var $li = $('<li>')
-                    .data('item', item)
-                    .addClass('item');
-
-                for (var index = 0; index < _options.visibleProperties.length; index++) {
-                    var property = _options.visibleProperties[index];
+                        .data('item', item)
+                        .addClass('item'),
+                    _options = $this._options(),
+                    visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn : _options.visibleProperties;
+                
+                for (var index = 0; index < visibleProperties.length; index++) {
+                    var property = visibleProperties[index];
                     if (_options.groupBy && _options.groupBy === property || !_this._isDefined(item, property)) {
                         continue;
                     }
@@ -707,10 +757,10 @@
          * Set value on item selection.
          */
             $this._value = function (val) {
-                var text = $this._getText(val);
-                var value = $this._getValue(val);
+                var text = $this._getText(val),
+                    value = $this._getValue(val);
                 
-                if (_options.multiple) {
+                if ($this._options('multiple')) {
                     if (val === '') {
                         return $this;
                     }
@@ -767,7 +817,7 @@
                     }
                 }
                 $this.val(value);
-                $this.trigger('change:flexdatalist', [value, text, _options]).trigger('change');
+                $this.trigger('change:flexdatalist', [value, text, $this._options()]).trigger('change');
                 return value;
             }
 
@@ -775,13 +825,16 @@
          * Get text that will be shown to user on input field.
          */
             $this._getText = function (item) {
-                var text = item;
+                var text = item,
+                    searchIn = $this._options('searchIn'),
+                    textProperty = $this._textProperty();
+                    
                 if (_this._isObject(item)) {
-                    text = item[_options.searchIn[0]];
-                    if (_this._isDefined(item, _options.textProperty)) {
-                        text = item[_options.textProperty];
+                    text = item[searchIn[0]];
+                    if (_this._isDefined(item, textProperty)) {
+                        text = item[textProperty];
                     } else {
-                        text = $this._replacePlaceholders(item, _options.textProperty, text);
+                        text = $this._replacePlaceholders(item, textProperty, text);
                     }
                 }
                 return text;
@@ -792,7 +845,8 @@
          * This is the value that eventually will be sent on form submittion.
          */
             $this._getValue = function (item) {
-                var value = item;
+                var value = item,
+                    _options = $this._options();
                 if (_this._isObject(item)) {
                     value = item[_options.searchIn[0]];
                     if (_options.valueProperty === '*') {
@@ -802,7 +856,7 @@
                     } else if ($this._toJSON()) {
                         var value = {},
                             properties = _options.valueProperty,
-                            textProperties = _options.textProperty;
+                            textProperties = $this._textProperty();
 
                         // Add placeholder properties to list
                         if (textProperties) {
@@ -875,8 +929,9 @@
          */
             $this._normalizeString = function (string) {
                 if (typeof string === 'string') {
-                    if (typeof _options.normalizeString === 'function') {
-                        string = _options.normalizeString(string);
+                    var normalizeString = $this._options('normalizeString');
+                    if (typeof normalizeString === 'function') {
+                        string = normalizeString(string);
                     }
                     return string.toUpperCase();
                 }
@@ -894,14 +949,15 @@
          * Check if input value must be a JSON string.
          */
             $this._toJSON = function () {
-                return _this._isObject(_options.valueProperty) || _options.valueProperty === '*';
+                var valueProperty = $this._options('valueProperty');
+                return _this._isObject(valueProperty) || valueProperty === '*';
             }
 
         /**
          * Check if input value must be a CSV string.
          */
             $this._toCSV = function () {
-                return (!$this._toJSON() && _options.multiple);
+                return (!$this._toJSON() && $this._options('multiple'));
             }
 
         /**
@@ -920,7 +976,7 @@
          */
             $this._position = function () {
                 var $target = $_this;
-                if (_options.multiple) {
+                if ($this._options('multiple')) {
                     $target = $ulMultiple;
                 }
                 // Set some required CSS properties
@@ -931,7 +987,7 @@
                     'z-index': ($target.css('z-index') + 1)
                 });
             }
-            
+
             // Set datalist data
             $this._datalist();
             // Initialize
