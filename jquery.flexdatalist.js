@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.5.0
+ * 1.5.1
  *
  * Depends:
  * jquery.js 1.7+
@@ -315,6 +315,10 @@
                 window.onresize = function(event) {
                     $this._position();
                 };
+                // Respecting autofocus
+                if ($_this.attr('autofocus')) {
+                    $_this.focus();
+                }
             }
         
         /**
@@ -766,11 +770,11 @@
                     }
                     $_this.val('');
                     var $li = $('<li>')
-                        .addClass('value')
-                        .append('<span class="text">' + text + '</span>')
-                        .append('<span class="fdl-remove">&times;</span>')
-                        .insertBefore($ulMultiple.find('li.input-container'));
-
+                            .addClass('value')
+                            .append('<span class="text">' + text + '</span>')
+                            .append('<span class="fdl-remove">&times;</span>')
+                            .insertBefore($ulMultiple.find('li.input-container'));
+                    
                     $li.find('span.fdl-remove').click(function () {
                         var $container = $(this).parent();
                         if ($this._toJSON() || $this._toCSV()) {
@@ -780,6 +784,7 @@
                         }
                         $container.remove();
                     });
+                    
                 } else if (text && text !== $_this.val()) {
                     $_this.val(text);
                 }

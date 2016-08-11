@@ -77,12 +77,9 @@
 .flexdatalist-multiple li.input-container,
 .flexdatalist-multiple li.input-container input {
     border: none;
-    width: 95%;
-}
-.flexdatalist-multiple li.input-container input {
+    width: 60%;
     height: auto;
     padding: 0;
-    line-height: normal;
     line-height: 25px;
 }
 .flexdatalist-multiple li.value {
@@ -90,8 +87,6 @@
     padding: 2px 25px 2px 5px;
     background: #efefef;
     border-radius: 3px;
-}
-.flexdatalist-multiple li.value span {
 }
 .flexdatalist-multiple li.value span.fdl-remove {
     font-weight: 700;
