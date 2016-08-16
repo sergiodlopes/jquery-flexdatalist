@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.5.1
+ * 1.5.2
  *
  * Depends:
  * jquery.js 1.7+
@@ -197,18 +197,11 @@
                 
                 _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
                 _options.relatives = _options.relatives && $(_options.relatives).length > 0 ? $(_options.relatives) : null;
+                _options.textProperty = _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
                
                 $this.data('flexdatalist', _options);
                 _cache = {};
                 return $this;
-            }
-        
-        /**
-         * Get text property.
-         */
-            $this._textProperty = function () {
-                var _options = $this._options();
-                return _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
             }
 
             $this._options($.extend({
@@ -315,7 +308,7 @@
                 window.onresize = function(event) {
                     $this._position();
                 };
-                // Respecting autofocus
+                // Respect autofocus attribute
                 if ($_this.attr('autofocus')) {
                     $_this.focus();
                 }
@@ -365,9 +358,10 @@
                 if (_this._isEmpty(value)) {
                     return;
                 }
+                $this.val('');
+                $_this.val('');
                 $this._parseValue(value, function (values) {
                     if (!_this._isEmpty(values)) {
-                        $this.val('');
                         $this._values(values);
                     }
                     _previousText = $this._keyword();
@@ -831,15 +825,14 @@
          */
             $this._getText = function (item) {
                 var text = item,
-                    searchIn = $this._options('searchIn'),
-                    textProperty = $this._textProperty();
-                    
+                    _options = $this._options();
+                
                 if (_this._isObject(item)) {
-                    text = item[searchIn[0]];
-                    if (_this._isDefined(item, textProperty)) {
-                        text = item[textProperty];
+                    text = item[_options.searchIn[0]];
+                    if (_this._isDefined(item, _options.textProperty)) {
+                        text = item[_options.textProperty];
                     } else {
-                        text = $this._replacePlaceholders(item, textProperty, text);
+                        text = $this._replacePlaceholders(item, _options.textProperty, text);
                     }
                 }
                 return text;
@@ -861,21 +854,21 @@
                     } else if ($this._toJSON()) {
                         var value = {},
                             properties = _options.valueProperty,
-                            textProperties = $this._textProperty();
+                            textProperty = _options.textProperty;
 
                         // Add placeholder properties to list
-                        if (textProperties) {
-                            var _properties = textProperties;
-                            if (typeof textProperties === 'string') {
-                                _properties = $this._parsePlaceholders(textProperties);
+                        if (textProperty) {
+                            var _properties = textProperty;
+                            if (typeof textProperty === 'string') {
+                                _properties = $this._parsePlaceholders(textProperty);
                             }
                             if (_this._isObject(_properties)) {
                                 $.each(_properties, function (string, property) {
                                     properties.push(property);
                                 });
                             }
-                        } else if (_this._isDefined(item, textProperties)) {
-                            properties.push(textProperties);
+                        } else if (_this._isDefined(item, textProperty)) {
+                            properties.push(textProperty);
                         }
 
                         $.each(properties, function (i, property) {
