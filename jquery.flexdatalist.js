@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.6.0
+ * 1.6.1
  *
  * Depends:
  * jquery.js 1.7+
@@ -409,8 +409,8 @@
             $this._tdata = function (callback) {
                 clearTimeout(_requestTimeout);
                 // Prevent get data when pressing back button
-                if (_backButton) {
-                    return callback(window.__flexData);
+                if (_backButton && document.__flexData) {
+                    return callback(document.__flexData);
                 }
                 if ($this.hasClass('flexdatalist-loading')) {
                     return;
@@ -418,8 +418,8 @@
                 _requestTimeout = setTimeout(function () {
                     $this._url(function (remoteData) {
                         $this._data(function (data) {
-                            window.__flexData = data.concat(remoteData);
-                            callback(window.__flexData);
+                            document.__flexData = data.concat(remoteData);
+                            callback(document.__flexData);
                         });
                     });
                 }, 300);
