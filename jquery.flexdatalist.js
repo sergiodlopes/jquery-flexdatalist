@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.5.2
+ * 1.6.0
  *
  * Depends:
  * jquery.js 1.7+
@@ -174,6 +174,8 @@
             var $this = $(this),
                 _cache = {},
                 _previousText = '',
+                _backButton = false,
+                _requestTimeout = null,
                 _inputName = $this.attr('name');
             
             if ($this.hasClass('flexdatalist-set')) {
@@ -200,7 +202,6 @@
                 _options.textProperty = _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
                
                 $this.data('flexdatalist', _options);
-                _cache = {};
                 return $this;
             }
 
@@ -237,13 +238,15 @@
                 var $ulMultiple = $('<ul>')
                     .addClass('flexdatalist-multiple')
                     .css({
-                        'background-color': $this.css("background-color"),
-                        'border-color': $this.css("border-left-color"),
-                        'border-width': $this.css("border-left-width"),
-                        'border-style': $this.css("border-left-style"),
-                        'border-radius': $this.css("border-top-left-radius")
+                        'background-color': $this.css('background-color'),
+                        'border-color': $this.css('border-left-color'),
+                        'border-width': $this.css('border-left-width'),
+                        'border-style': $this.css('border-left-style'),
+                        'border-radius': $this.css('border-top-left-radius')
                     })
-                    .insertAfter($this);
+                    .insertAfter($this).click(function () {
+                        $(this).find('input').focus();
+                    });
                 var $li = $('<li class="input-container">')
                     .addClass('flexdatalist-multiple-value')
                     .append($_this)
@@ -271,8 +274,8 @@
                     if ($this._changed() && _this._keyNum(event) !== 13) {
                         var val = $this._keyword();
                         if (val.length >= _options.minLength) {
-                            $this._search(function (results) {
-                                $this._showResults(results);
+                            $this._search(function (matches) {
+                                $this._showResults(matches);
                             });
                         } else {
                             $this._removeResults();
@@ -286,10 +289,12 @@
                         }
                     }
                     _previousText = $this._keyword();
+                }).on('keyup', function (event) {
+                    _backButton = _this._keyNum(event) == 8;
                 }).focus(function () {
                     if (_options.minLength === 0) {
                         if ($this._keyword() === '') {
-                            $this._data(function (data) {
+                            $this._tdata(function (data) {
                                 $this._showResults(data);
                             });
                         } else {
@@ -383,7 +388,7 @@
                         var _searchIn = _options.searchIn;
                         _options.searchIn = _options.valueProperty.split(',');
                         _options.searchEqual = true;
-                        $this._search(function (results, matches) {
+                        $this._search(function (matches) {
                             if (matches.length > 0) {
                                 callback(matches);
                             }
@@ -401,64 +406,113 @@
         /**
          * Get data.
          */
-            $this._data = function (callback) {
-                var _options = $this._options(),
-                    url = _options.url;
-
-                if (_this._isObject(_options.data) && !_this._isEmpty(_options.data)) {
-                    callback(_options.data);
-                    return;
-                } else if (typeof _options.data === 'string') {
-                   url = _options.data;
-                } else if (_this._isEmpty(_options.url) && _this._isEmpty(_options.data)) {
+            $this._tdata = function (callback) {
+                clearTimeout(_requestTimeout);
+                // Prevent get data when pressing back button
+                if (_backButton) {
+                    return callback(window.__flexData);
+                }
+                if ($this.hasClass('flexdatalist-loading')) {
                     return;
                 }
-                
-                var keyword = $this._keyword(),
-                    keywordTruncated = keyword.substring(0, _options.minLength),
-                    cachedData = $this._cache(keywordTruncated);
+                _requestTimeout = setTimeout(function () {
+                    $this._url(function (remoteData) {
+                        $this._data(function (data) {
+                            window.__flexData = data.concat(remoteData);
+                            callback(window.__flexData);
+                        });
+                    });
+                }, 300);
+            }
 
+        /**
+         * Get static data.
+         */
+            $this._data = function (callback) {
+                var _options = $this._options();
+                if (typeof _options.data === 'string') {
+                    $this._remote({
+                        url: _options.data,
+                        success: function (data) {
+                            var _data = $this._remoteData(data);
+                            _options.data = _data;
+                            callback(_data);
+                        }
+                    });
+                } else {
+                    callback(_options.data);
+                }
+            }
+
+        /**
+         * Get remote data.
+         */
+            $this._url = function (callback) {
+                var _options = $this._options(),
+                    keyword = $this._keyword(),
+                    cacheKey = keyword;
+                
+                if (_this._isEmpty(_options.url) || keyword.length === 0) {
+                    return callback([]);
+                }
+                if (_options.cache && _options.cache !== 2) {
+                    cacheKey = keyword.substring(0, (_options.minLength > 0 ? _options.minLength : 1));
+                }
+                
                 // Check cache
+                var cachedData = $this._cache(cacheKey);
                 if (cachedData) {
                     callback(cachedData);
                     return;
                 }
-
-                if ($this.hasClass('flexdatalist-loading')) {
-                    return;
-                }
-                $this.addClass('flexdatalist-loading');
-
-                $.ajax({
-                    url: url,
+                
+                $this._remote({
+                    url: _options.url,
                     data: $.extend($this._relativesData(), _options.params, {
                             keyword: keyword,
                             contain: _options.searchContain,
                             selected: $this.val()
                         }
                     ),
-                    type: 'post',
-                    dataType: 'json',
                     success: function (data) {
-                        $this.removeClass('flexdatalist-loading');
-                        var _data = data.results ? data.results : data;
-                        if (typeof _data === 'string' && _data.indexOf('[{') === 0) {
-                            _data = JSON.parse(_data);
-                        }
-                        if (_this._isObject(_data)) {
-                            callback(_data);
-                            if (typeof _options.data === 'string') {
-                                _options.data = _data;
-                            } else if (!_this._isEmpty(_options.url) && !_this._isEmpty(_data)) {
-                                $this._cache(keywordTruncated, _data);
-                            }
-                        }
+                        var _data = $this._remoteData(data);
+                        $this._cache(cacheKey, _data);
+                        callback(_data);
                     }
                 });
             }
 
         /**
-         * Get data.
+         * AJAX request.
+         */
+            $this._remote = function (options) {
+                $this.addClass('flexdatalist-loading');
+                options = $.extend({
+                    type: 'post',
+                    dataType: 'json',
+                    complete: function () {
+                        $this.removeClass('flexdatalist-loading');
+                    }
+                }, options);
+                $.ajax(options);
+            }
+
+        /**
+         * Extract remote data from server response.
+         */
+            $this._remoteData = function (data) {
+                var _data = data.results ? data.results : data;
+                if (typeof _data === 'string' && _data.indexOf('[{') === 0) {
+                    _data = JSON.parse(_data);
+                }
+                if (_this._isObject(_data)) {
+                    return _data;
+                }
+                return [];
+            }
+            
+        /**
+         * Get relatives data.
          */
             $this._relativesData = function () {
                 var relatives = $this._options('relatives'),
@@ -513,9 +567,8 @@
          * Search for keywords in data and return matches.
          */
             $this._search = function (callback, keywords) {
-                $this._data(function (data) {
-                    var results = [],
-                        matches = [];
+                $this._tdata(function (data) {
+                    var matches = [];
                     
                     if (!_this._isDefined(keywords)) {
                         keywords = $this._keyword();
@@ -523,7 +576,7 @@
                     if (typeof keywords === 'string') {
                         keywords = [keywords];
                     }
-                    var groupProperty = $this._options('groupBy');
+                    
                     for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                         var keyword = keywords[kwindex];
                         for (var index = 0; index < data.length; index++) {
@@ -532,20 +585,9 @@
                                 continue;
                             }
                             matches.push(_data);
-                            if (groupProperty) {
-                                if (_this._isDefined(_data, groupProperty)) {
-                                    var propertyValue = _data[groupProperty];
-                                    if (!_this._isDefined(results, propertyValue)) {
-                                        results[propertyValue] = [];
-                                    }
-                                    results[propertyValue].push(_data);
-                                }
-                            } else {
-                                results.push(_data);
-                            }
                         }
                     }
-                    callback(results, matches);
+                    callback(matches);
                 });
             }
 
@@ -561,9 +603,12 @@
                     if (!_this._isDefined(item, searchProperty)) {
                         continue;
                     }
-                    var propertyValue = item[searchProperty];
-                    if ($this._find(keyword, propertyValue, item)) {
-                        item[searchProperty + '_highlight'] = $this._highlight(keyword, propertyValue);
+                    var text = item[searchProperty];
+                    if (typeof text === 'number') {
+                        text = text.toString();
+                    }
+                    if ($this._find(keyword, text)) {
+                        item[searchProperty + '_highlight'] = $this._highlight(keyword, text);
                         hasMatches = true;
                     }
                 }
@@ -583,7 +628,7 @@
         /**
          * Search for keyword in string.
          */
-            $this._find = function (keyword, text, item) {
+            $this._find = function (keyword, text) {
                 var _options = $this._options();
                 text = $this._normalizeString(text),
                 keyword = $this._normalizeString(keyword);
@@ -604,14 +649,17 @@
                 if ($this._selected()) {
                     $this._selected(false)._value('');
                 }
-                if (!_options.groupBy) {
+                if (data.length === 0) {
+                    return;
+                } else if (!_options.groupBy) {
                     $this._items(data, $ul);
                 } else {
+                    data = $this._groupData(data);
                     Object.keys(data).forEach(function (groupName, index) {
                         var items = data[groupName],
                             property = _options.groupBy,
                             groupText = $this._getHighlight(items[0], property, groupName);
-
+                        
                         var $li = $('<li>')
                                 .addClass('group')
                                 .append($('<span>')
@@ -647,6 +695,25 @@
                 }
 
                 $this._position();
+            }
+
+        /**
+         * Group data by property name.
+         */
+            $this._groupData = function (items) {
+                var data = [],
+                    groupProperty = $this._options('groupBy');
+                for (var index = 0; index < items.length; index++) {
+                    var _data = items[index];
+                    if (_this._isDefined(_data, groupProperty)) {
+                        var propertyValue = _data[groupProperty];
+                        if (!_this._isDefined(data, propertyValue)) {
+                            data[propertyValue] = [];
+                        }
+                        data[propertyValue].push(_data);
+                    }
+                }
+                return data;
             }
 
         /**
