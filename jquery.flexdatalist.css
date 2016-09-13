@@ -89,6 +89,15 @@
     background: #efefef;
     border-radius: 3px;
 }
+.flexdatalist-multiple li.toggle {
+    cursor: pointer;
+    transition: opacity ease-in-out 300ms;
+}
+.flexdatalist-multiple li.toggle.disabled {
+    text-decoration: line-through;
+    opacity: 0.80;
+}
+
 .flexdatalist-multiple li.value span.fdl-remove {
     font-weight: 700;
     padding: 0 5px;

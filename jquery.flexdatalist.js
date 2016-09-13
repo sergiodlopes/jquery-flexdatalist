@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.6.1
+ * 1.7.0
  *
  * Depends:
  * jquery.js 1.7+
@@ -26,36 +26,38 @@
      * Destroy.
      */
         this._destroy = function () {
-            $input.removeClass('flexdatalist-set')
-                .data('flexdatalist', null)
-                .off()
-                .val('')
-                .attr('type', 'text')
-                .next('.flexdatalist-alias, ul.flexdatalist-multiple')
-                .remove();
-            return false;
+            $input.each(function () {
+                var data = $(this).data('flexdatalist');
+                $(this).removeClass('flexdatalist-set')
+                    .off()
+                    .attr('type', 'text')
+                    .val(data.originalValue)
+                    .data('flexdatalist', null)
+                    .next('.flexdatalist-alias, ul.flexdatalist-multiple')
+                    .remove();
+            });
         }
-        
+
     /**
      * Reset.
      */
         this._reset = function () {
             this._destroy();
         }
-        
+
     /**
      * Handle options.
      */
         if (typeof options === 'string') {
             if (typeof this['_' + options] === 'function') {
                 if (!this['_' + options]()) {
-                    return;
+                    return this;
                 }
             } else if (value) {
                 var _data = $input.data('flexdatalist');
                 _data[options] = value;
                 $input.data('flexdatalist', _data);
-                return;
+                return this;
             }
         }
 
@@ -110,7 +112,7 @@
                             $active = $li.removeClass('active').filter('.item:last').addClass('active');
                         }
                     }
-                    
+
                     // Scroll to
                     var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
                     $ul.animate({
@@ -174,10 +176,9 @@
             var $this = $(this),
                 _cache = {},
                 _previousText = '',
-                _backButton = false,
                 _requestTimeout = null,
                 _inputName = $this.attr('name');
-            
+
             if ($this.hasClass('flexdatalist-set')) {
                 return;
             }
@@ -196,11 +197,12 @@
                 } else {
                     _options = option;
                 }
-                
+
                 _options.searchIn = typeof _options.searchIn === 'string' ? _options.searchIn.split(',') : _options.searchIn;
                 _options.relatives = _options.relatives && $(_options.relatives).length > 0 ? $(_options.relatives) : null;
                 _options.textProperty = _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
-               
+                _options.visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn[0] : _options.visibleProperties;
+
                 $this.data('flexdatalist', _options);
                 return $this;
             }
@@ -224,10 +226,12 @@
                     searchEqual: false,
                     normalizeString: null,
                     multiple: $this.attr('multiple'),
-                    maxShownResults: 100
+                    maxShownResults: 100,
+                    toggleSelected: false,
+                    _values: []
                 }, options, $this.data()
             ));
- 
+
             // Handle multiple values
             var $_this = $this
                     .clone(false)
@@ -289,8 +293,6 @@
                         }
                     }
                     _previousText = $this._keyword();
-                }).on('keyup', function (event) {
-                    _backButton = _this._keyNum(event) == 8;
                 }).focus(function () {
                     if (_options.minLength === 0) {
                         if ($this._keyword() === '') {
@@ -318,7 +320,7 @@
                     $_this.focus();
                 }
             }
-        
+
         /**
          * Check if field's text has changed.
          */
@@ -337,7 +339,7 @@
                 var toggle = function (init) {
                     _options.relatives.each(function () {
                         var disabled = _this._isEmpty($(this).val()),
-                            empty = _this._isEmpty($this.val());                            
+                            empty = _this._isEmpty($this.val());
                         $_this.prop('disabled', disabled);
                         if (!init && (disabled || !empty)) {
                             $this._value('');
@@ -363,6 +365,7 @@
                 if (_this._isEmpty(value)) {
                     return;
                 }
+                $this._options('originalValue', $this.val());
                 $this.val('');
                 $_this.val('');
                 $this._parseValue(value, function (values) {
@@ -407,29 +410,31 @@
          * Get data.
          */
             $this._tdata = function (callback) {
-                clearTimeout(_requestTimeout);
                 // Prevent get data when pressing back button
-                if (_backButton && document.__flexData) {
-                    return callback(document.__flexData);
-                }
                 if ($this.hasClass('flexdatalist-loading')) {
                     return;
                 }
+                clearTimeout(_requestTimeout);
                 _requestTimeout = setTimeout(function () {
                     $this._url(function (remoteData) {
                         $this._data(function (data) {
-                            document.__flexData = data.concat(remoteData);
-                            callback(document.__flexData);
+                            callback(data.concat(remoteData));
                         });
                     });
-                }, 300);
+                }, 200);
             }
 
         /**
          * Get static data.
          */
             $this._data = function (callback) {
-                var _options = $this._options();
+                var _options = $this._options(),
+                    keyword = $this._keyword();
+
+                if (_options.minLength > 0 && _options.minLength > keyword.length) {
+                    return;
+                }
+
                 if (typeof _options.data === 'string') {
                     $this._remote({
                         url: _options.data,
@@ -451,21 +456,21 @@
                 var _options = $this._options(),
                     keyword = $this._keyword(),
                     cacheKey = keyword;
-                
-                if (_this._isEmpty(_options.url) || keyword.length === 0) {
+
+                if (_this._isEmpty(_options.url) || (_options.minLength > keyword.length)) {
                     return callback([]);
                 }
                 if (_options.cache && _options.cache !== 2) {
                     cacheKey = keyword.substring(0, (_options.minLength > 0 ? _options.minLength : 1));
                 }
-                
+
                 // Check cache
                 var cachedData = $this._cache(cacheKey);
                 if (cachedData) {
                     callback(cachedData);
                     return;
                 }
-                
+
                 $this._remote({
                     url: _options.url,
                     data: $.extend($this._relativesData(), _options.params, {
@@ -475,9 +480,17 @@
                         }
                     ),
                     success: function (data) {
-                        var _data = $this._remoteData(data);
+                        $this.removeClass('flexdatalist-loading');
+                        var _data = $this._remoteData(data),
+                            _keyword = $this._keyword();
+                        if (_keyword.length > keyword.length) {
+                            $this._search(function (matches) {
+                                $this._showResults(matches);
+                            });
+                        } else {
+                            callback(_data);
+                        }
                         $this._cache(cacheKey, _data);
-                        callback(_data);
                     }
                 });
             }
@@ -510,7 +523,7 @@
                 }
                 return [];
             }
-            
+
         /**
          * Get relatives data.
          */
@@ -526,7 +539,7 @@
                 }
                 return data;
             }
-            
+
         /**
          * Set datalist data, if exists.
          */
@@ -568,19 +581,19 @@
          */
             $this._search = function (callback, keywords) {
                 $this._tdata(function (data) {
-                    var matches = [];
-                    
+                    var matches = [],
+                        values = $this._options('_values');
+
                     if (!_this._isDefined(keywords)) {
                         keywords = $this._keyword();
                     }
                     if (typeof keywords === 'string') {
                         keywords = [keywords];
                     }
-                    
                     for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                         var keyword = keywords[kwindex];
                         for (var index = 0; index < data.length; index++) {
-                            var _data = $this._matches(data[index], keyword);
+                            var _data = $this._matches(data[index], keyword, values);
                             if (!_data) {
                                 continue;
                             }
@@ -594,21 +607,27 @@
         /**
          * Match against searchable properties.
          */
-            $this._matches = function (item, keyword) {
+            $this._matches = function (item, keyword, values) {
                 var hasMatches = false,
-                    searchIn = $this._options('searchIn');
-
+                    _options = $this._options(),
+                    searchIn = _options.searchIn,
+                    visibleProperties = _options.visibleProperties;
+                
+                if (values && values.indexOf($this._getText(item)) > -1) {
+                    return false;
+                }
+                    
                 for (var index = 0; index < searchIn.length; index++) {
-                    var searchProperty = searchIn[index];
-                    if (!_this._isDefined(item, searchProperty)) {
+                    var searchProperty = searchIn[index],
+                        visibleProperty = visibleProperties[index];
+                    if (!_this._isDefined(item, searchProperty) || !_this._isDefined(item, visibleProperty)) {
                         continue;
                     }
-                    var text = item[searchProperty];
-                    if (typeof text === 'number') {
-                        text = text.toString();
-                    }
+                    var text = item[searchProperty].toString(),
+                        matchText = item[visibleProperty];
+                    
                     if ($this._find(keyword, text)) {
-                        item[searchProperty + '_highlight'] = $this._highlight(keyword, text);
+                        item[visibleProperty + '_highlight'] = $this._highlight(keyword, matchText.toString());
                         hasMatches = true;
                     }
                 }
@@ -633,7 +652,7 @@
                 text = $this._normalizeString(text),
                 keyword = $this._normalizeString(keyword);
                 if (_options.searchEqual) {
-                    return (text == keyword);
+                    return text == keyword;
                 }
                 return (_options.searchContain ? (text.indexOf(keyword) >= 0) : (text.indexOf(keyword) === 0));
             }
@@ -659,7 +678,7 @@
                         var items = data[groupName],
                             property = _options.groupBy,
                             groupText = $this._getHighlight(items[0], property, groupName);
-                        
+
                         var $li = $('<li>')
                                 .addClass('group')
                                 .append($('<span>')
@@ -744,7 +763,7 @@
          */
             $this._items = function (items, $ul) {
                 var max = $this._options('maxShownResults');
-                for (var index = 0; index < items.length; index++) {                    
+                for (var index = 0; index < items.length; index++) {
                     if (max > 0 && max === index) {
                         break;
                     }
@@ -760,8 +779,8 @@
                         .data('item', item)
                         .addClass('item'),
                     _options = $this._options(),
-                    visibleProperties = _options.visibleProperties.length === 0 ? _options.searchIn : _options.visibleProperties;
-                
+                    visibleProperties = _options.visibleProperties;
+
                 for (var index = 0; index < visibleProperties.length; index++) {
                     var property = visibleProperties[index];
                     if (_options.groupBy && _options.groupBy === property || !_this._isDefined(item, property)) {
@@ -822,30 +841,56 @@
          * Set value on item selection.
          */
             $this._value = function (val) {
-                var text = $this._getText(val),
+                var _options = $this._options(),
+                    text = $this._getText(val),
                     value = $this._getValue(val);
+
+                if (text.length > 0) {
+                    _options._values.push(text);
+                }
                 
-                if ($this._options('multiple')) {
+                if (_options.multiple) {
                     if (val === '') {
                         return $this;
                     }
                     $_this.val('');
                     var $li = $('<li>')
-                            .addClass('value')
+                            .addClass('value' + (_options.toggleSelected ? ' toggle' : ''))
                             .append('<span class="text">' + text + '</span>')
                             .append('<span class="fdl-remove">&times;</span>')
-                            .insertBefore($ulMultiple.find('li.input-container'));
-                    
+                            .insertBefore($ulMultiple.find('li.input-container'));                            
+
                     $li.find('span.fdl-remove').click(function () {
-                        var $container = $(this).parent();
-                        if ($this._toJSON() || $this._toCSV()) {
+                        var $container = $(this).parent(),
+                            index = $container.index();
+                        if (!$container.hasClass('disabled') && ($this._toJSON() || $this._toCSV())) {
                             var currentValue = $this._inputValue();
-                            currentValue.splice($container.index(), 1);
+                            currentValue.splice(index, 1);
+                            _options._values.splice(index, 1);
                             $this._inputValue(currentValue);
                         }
                         $container.remove();
                     });
-                    
+                    // Toggle selected option
+                    if (_options.toggleSelected) {
+                        $li.click(function () {
+                            var $clicked = $(this),
+                                currentValue = $this._inputValue(),
+                                index = $clicked.index();
+                            if ($clicked.hasClass('disabled')) {
+                                var value = $clicked.data('_value');
+                                currentValue.splice(index, 0, value);
+                                _options._values.splice(index, 0, $this._getText(value));
+                                $clicked.removeClass('disabled');
+                            } else {
+                                var value = currentValue.splice(index, 1);
+                                $clicked.data('_value', value[0]);
+                                _options._values.splice(index, 1);
+                                $clicked.addClass('disabled');
+                            }
+                            $this._inputValue(currentValue);
+                        });
+                    }
                 } else if (text && text !== $_this.val()) {
                     $_this.val(text);
                 }
@@ -893,7 +938,7 @@
             $this._getText = function (item) {
                 var text = item,
                     _options = $this._options();
-                
+
                 if (_this._isObject(item)) {
                     text = item[_options.searchIn[0]];
                     if (_this._isDefined(item, _options.textProperty)) {
@@ -902,7 +947,7 @@
                         text = $this._replacePlaceholders(item, _options.textProperty, text);
                     }
                 }
-                return text;
+                return $('<div>').html(text).text();
             }
 
         /**
