@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.7.0
+ * 1.7.1
  *
  * Depends:
  * jquery.js 1.7+
@@ -20,175 +20,13 @@ jQuery.fn.flexdatalist = function(options, value) {
     'use strict';
     var $document = $(document),
         $input = $(this),
+        input,
         _this = this;
-        
-/**
- * Destroy.
- */
-    this._destroy = function ($_input) {
-        if (!$_input) {
-            $_input = $input;
-        }
-        $_input.each(function () {
-            var data = $(this).data('flexdatalist');
-            $(this).removeClass('flexdatalist-set')
-                .off()
-                .attr('type', 'text')
-                .val((data && data.originalValue ? data.originalValue : ''))
-                .data('flexdatalist', null)
-                .next('.flexdatalist-alias, ul.flexdatalist-multiple')
-                .remove();
-        });
-    }
 
 /**
- * Reset.
+ * Each iteration.
  */
-    this._reset = function () {
-        this._destroy();
-    }
-
-/**
- * Handle options.
- */
-    if (typeof options === 'string') {
-        if (typeof this['_' + options] === 'function') {
-            if (!this['_' + options]()) {
-                return this;
-            }
-        } else if (!value) {
-            var _data = $input.data('flexdatalist');
-            return _data[options];
-        } else if (value) {
-            var _data = $input.data('flexdatalist');
-            _data[options] = value;
-            $input.data('flexdatalist', _data);
-            return this;
-        }
-    }
-
-/**
- * Get key code from event.
- */
-    this._keyNum = function (event) {
-        return event.which || event.keyCode;
-    }
-
-    // Handle selection list keyboard shortcuts and events.
-    if (!$document.data('flexdatalist')) {
-        // Remove results on outside click
-        $(document).mouseup(function (event) {
-            var $container = $('.flexdatalist-results'),
-                $target = $container.data('target');
-            if ((!$target || !$target.is(':focus')) && !$container.is(event.target) && $container.has(event.target).length === 0) {
-                $container.remove();
-            }
-        // Keyboard navigation
-        }).keydown(function (event) {
-            var $ul = $('.flexdatalist-results'),
-                $li = $ul.find('li'),
-                $active = $li.filter('.active'),
-                index = $active.index(),
-                length = $li.length,
-                keynum = _this._keyNum(event);
-
-            if (length === 0) {
-                return;
-            }
-
-            // Enter key
-            if (keynum === 13) {
-                event.preventDefault();
-                $active.click();
-            // Up/Down key
-            } else if (keynum === 40 || keynum === 38) {
-                event.preventDefault();
-                // Down key
-                if (keynum === 40) {
-                    if (index < length && $active.nextAll('.item').first().length > 0) {
-                        $active = $active.removeClass('active').nextAll('.item').first().addClass('active');
-                    } else {
-                        $active = $li.removeClass('active').filter('.item:first').addClass('active');
-                    }
-                // Up key
-                } else if (keynum === 38) {
-                    if (index > 0 && $active.prevAll('.item').first().length > 0) {
-                        $active = $active.removeClass('active').prevAll('.item').first().addClass('active');
-                    } else {
-                        $active = $li.removeClass('active').filter('.item:last').addClass('active');
-                    }
-                }
-
-                // Scroll to
-                var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
-                $ul.animate({
-                    scrollTop: position + $ul.scrollTop()
-                }, 100);
-            }
-        }).data('flexdatalist', true);
-    }
-
-/**
- * Is variable empty.
- */
-    this._isEmpty = function (value) {
-        if (!_this._isDefined(value)) {
-            return true;
-        } else if (value === null) {
-            return true;
-        } else if (value === true) {
-            return false;
-        } else if (this._length(value) === 0) {
-            return true;
-        } else if ($.trim(value) === '') {
-            return true;
-        }
-        return false;
-    }
-
-/**
- * Is variable an object.
- */
-    this._isObject = function (value) {
-        return (value && typeof value === 'object');
-    }
-
-/**
- * To array.
- */
-    this._csvToArray = function (value, _default) {
-        if (value.length === 0) {
-            return _default;
-        }
-        return typeof value === 'string' ? value.split(',') : value;
-    }
-
-/**
- * Get length of variable.
- */
-    this._length = function (value) {
-        if (this._isObject(value)) {
-            return Object.keys(value).length;
-        } else if (typeof value.length === 'number') {
-            return value.length;
-        }
-        return 0;
-    }
-/**
- * Check if variable (and optionally property) is defined.
- */
-    this._isDefined = function (variable, property) {
-        var _variable = (typeof variable !== 'undefined');
-        if (_variable && typeof property !== 'undefined') {
-            return (typeof variable[property] !== 'undefined');
-        }
-        return _variable;
-    }
-
-/**
- * Each element iteration.
- */
-    var input = function() {
+    input = function() {
         var $this = $(this),
             _cache = {},
             _previousText = '',
@@ -431,9 +269,20 @@ jQuery.fn.flexdatalist = function(options, value) {
             if ($this.hasClass('flexdatalist-loading')) {
                 return;
             }
+            $this.trigger('before:flexdatalist.data');
             $this._url(function (remoteData) {
                 $this._data(function (data) {
-                    callback(data.concat(remoteData));
+                    data = data.concat(remoteData);
+                    // Check for already set values
+                    var values = $this._options('_values');
+                    for (var i = 0; i < data.length; i++) {
+                        var item = data[i];
+                        if (values && values.indexOf($this._getText(item)) > -1) {
+                            delete data[i];
+                        }
+                    }                    
+                    $this.trigger('after:flexdatalist.data', [data]);
+                    callback(data);
                 });
             });
         }
@@ -470,20 +319,20 @@ jQuery.fn.flexdatalist = function(options, value) {
             if (_this._isEmpty(_options.url) || (_options.minLength > keyword.length)) {
                 return callback([]);
             }
-            
+
             clearTimeout(_requestTimeout);
             _requestTimeout = setTimeout(function () {
                 if (_options.cache && _options.cache !== 2) {
                     cacheKey = keyword.substring(0, (_options.minLength > 0 ? _options.minLength : 1));
                 }
-    
+
                 // Check cache
                 var cachedData = $this._cache(cacheKey);
                 if (cachedData) {
                     callback(cachedData);
                     return;
                 }
-    
+
                 $this._remote({
                     url: _options.url,
                     data: $.extend($this._relativesData(), _options.params, {
@@ -499,8 +348,8 @@ jQuery.fn.flexdatalist = function(options, value) {
                         if (_keyword.length > keyword.length) {
                             $this._search(function (matches) {
                                 $this._showResults(matches);
-                            });
-                        } else {
+                            });                            
+                        } else if (_keyword.length >= _options.minLength) {
                             callback(_data);
                         }
                         $this._cache(cacheKey, _data);
@@ -607,6 +456,7 @@ jQuery.fn.flexdatalist = function(options, value) {
                 if (typeof keywords === 'string') {
                     keywords = [keywords];
                 }
+                $this.trigger('before:flexdatalist.search', [keywords, data]);
                 for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                     var keyword = keywords[kwindex];
                     for (var index = 0; index < data.length; index++) {
@@ -617,6 +467,7 @@ jQuery.fn.flexdatalist = function(options, value) {
                         matches.push(_data);
                     }
                 }
+                $this.trigger('after:flexdatalist.search', [keywords, data, matches]);
                 callback(matches);
             });
         }
@@ -626,19 +477,16 @@ jQuery.fn.flexdatalist = function(options, value) {
      */
         $this._matches = function (item, keyword, values) {
             var hasMatches = false,
-                _item = jQuery.extend({}, item),
+                _item = $.extend({}, item),
                 _options = $this._options(),
                 searchIn = _options.searchIn;
-            // Check for duplicates
-            if (values && values.indexOf($this._getText(item)) > -1) {
-                return false;
-            }
+
             for (var index = 0; index < searchIn.length; index++) {
                 var searchProperty = searchIn[index];
                 if (!_this._isDefined(item, searchProperty)) {
                     continue;
-                }                
-                var text = item[searchProperty].toString();                
+                }
+                var text = item[searchProperty].toString();
                 if ($this._find(keyword, text)) {
                     _item[searchProperty + '_highlight'] = $this._highlight(keyword, text);
                     hasMatches = true;
@@ -746,6 +594,65 @@ jQuery.fn.flexdatalist = function(options, value) {
         }
 
     /**
+     * Items iteration.
+     */
+        $this._items = function (items, $ul) {
+            var max = $this._options('maxShownResults');
+            $this.trigger('show:flexdatalist.results', [items]);
+            for (var index = 0; index < items.length; index++) {
+                if (max > 0 && max === index) {
+                    break;
+                }
+                $this._item(items[index]).appendTo($ul);
+            }
+            $this.trigger('shown:flexdatalist.results', [items]);
+        }
+
+    /**
+     * Result item creation.
+     */
+        $this._item = function (item) {
+            var $li = $('<li>')
+                    .data('item', item)
+                    .addClass('item'),
+                _options = $this._options(),
+                visibleProperties = _options.visibleProperties;
+
+            for (var index = 0; index < visibleProperties.length; index++) {
+                var visibleProperty = visibleProperties[index];
+                if (_options.groupBy && _options.groupBy === visibleProperty || !_this._isDefined(item, visibleProperty)) {
+                    continue;
+                }
+                var $item = {};
+                if (visibleProperty === 'thumb') {
+                    // Thumbnail image
+                    $item = $('<img>')
+                        .addClass('item item-' + visibleProperty)
+                        .attr('src', item[visibleProperty]);
+                } else {
+                    var propertyText = $this._getHighlight(item, visibleProperty);
+                    // Other text properties
+                    $item = $('<span>')
+                        .addClass('item item-' + visibleProperty)
+                        .html(propertyText + ' ');
+                }
+                $item.appendTo($li);
+            }
+            return $li;
+        }
+
+    /**
+     * Check if highlighted property value exists,
+     * if true, return it, if not, fallback to given string
+     */
+        $this._getHighlight = function (item, property, fallback) {
+            if (_this._isDefined(item, property + '_highlight')) {
+                return item[property + '_highlight'];
+            }
+            return (_this._isDefined(item, property) ? item[property] : fallback);
+        }
+
+    /**
      * Get/create list container.
      */
         $this._getResultsContainer = function () {
@@ -766,52 +673,6 @@ jQuery.fn.flexdatalist = function(options, value) {
                     }).data('target', $_this);
             }
             return $container;
-        }
-
-    /**
-     * Items iteration.
-     */
-        $this._items = function (items, $ul) {
-            var max = $this._options('maxShownResults');
-            for (var index = 0; index < items.length; index++) {
-                if (max > 0 && max === index) {
-                    break;
-                }
-                $this._item(items[index]).appendTo($ul);
-            }
-        }
-
-    /**
-     * Result item creation.
-     */
-        $this._item = function (item) {
-            var $li = $('<li>')
-                    .data('item', item)
-                    .addClass('item'),
-                _options = $this._options(),
-                visibleProperties = _options.visibleProperties;
-
-            for (var index = 0; index < visibleProperties.length; index++) {
-                var property = visibleProperties[index];
-                if (_options.groupBy && _options.groupBy === property || !_this._isDefined(item, property)) {
-                    continue;
-                }
-                var $item = {};
-                if (property === 'thumb') {
-                    // Thumbnail image
-                    $item = $('<img>')
-                        .addClass('item item-' + property)
-                        .attr('src', item[property]);
-                } else {
-                    var propertyText = $this._getHighlight(item, property);
-                    // Other text properties
-                    $item = $('<span>')
-                        .addClass('item item-' + property)
-                        .html(propertyText + ' ');
-                }
-                $item.appendTo($li);
-            }
-            return $li;
         }
 
     /**
@@ -858,7 +719,7 @@ jQuery.fn.flexdatalist = function(options, value) {
             if (text.length > 0) {
                 _options._values.push(text);
             }
-            
+
             if (_options.multiple) {
                 if (val === '') {
                     return $this;
@@ -868,7 +729,7 @@ jQuery.fn.flexdatalist = function(options, value) {
                         .addClass('value' + (_options.toggleSelected ? ' toggle' : ''))
                         .append('<span class="text">' + text + '</span>')
                         .append('<span class="fdl-remove">&times;</span>')
-                        .insertBefore($ulMultiple.find('li.input-container'));                            
+                        .insertBefore($ulMultiple.find('li.input-container'));
 
                 $li.find('span.fdl-remove').click(function () {
                     var $container = $(this).parent(),
@@ -1084,17 +945,6 @@ jQuery.fn.flexdatalist = function(options, value) {
         }
 
     /**
-     * Check if highlighted property value exists,
-     * if true, return it, if not, fallback to given string
-     */
-        $this._getHighlight = function (item, property, fallback) {
-            if (_this._isDefined(item, property + '_highlight')) {
-                return item[property + '_highlight'];
-            }
-            return (_this._isDefined(item, property) ? item[property] : fallback);
-        }
-
-    /**
      * Position results below parent element.
      */
         $this._position = function () {
@@ -1121,7 +971,170 @@ jQuery.fn.flexdatalist = function(options, value) {
         $this._chained();
         _previousText = $this._keyword();
     };
-    
+
+/**
+ * Destroy.
+ */
+    this._destroy = function ($_input) {
+        if (!$_input) {
+            $_input = $input;
+        }
+        $_input.each(function () {
+            var data = $(this).data('flexdatalist');
+            $(this).removeClass('flexdatalist-set')
+                .off()
+                .attr('type', 'text')
+                .val((data && data.originalValue ? data.originalValue : ''))
+                .data('flexdatalist', null)
+                .next('.flexdatalist-alias, ul.flexdatalist-multiple')
+                .remove();
+        });
+    }
+
+/**
+ * Reset.
+ */
+    this._reset = function () {
+        this._destroy();
+    }
+
+/**
+ * Handle options.
+ */
+    if (typeof options === 'string') {
+        if (typeof this['_' + options] === 'function') {
+            if (!this['_' + options]()) {
+                return this;
+            }
+        } else if (!value) {
+            var _data = $input.data('flexdatalist');
+            return _data[options];
+        } else if (value) {
+            var _data = $input.data('flexdatalist');
+            _data[options] = value;
+            $input.data('flexdatalist', _data);
+            return this;
+        }
+    }
+
+/**
+ * Get key code from event.
+ */
+    this._keyNum = function (event) {
+        return event.which || event.keyCode;
+    }
+
+    // Handle selection list keyboard shortcuts and events.
+    if (!$document.data('flexdatalist')) {
+        // Remove results on outside click
+        $(document).mouseup(function (event) {
+            var $container = $('.flexdatalist-results'),
+                $target = $container.data('target');
+            if ((!$target || !$target.is(':focus')) && !$container.is(event.target) && $container.has(event.target).length === 0) {
+                $container.remove();
+            }
+        // Keyboard navigation
+        }).keydown(function (event) {
+            var $ul = $('.flexdatalist-results'),
+                $li = $ul.find('li'),
+                $active = $li.filter('.active'),
+                index = $active.index(),
+                length = $li.length,
+                keynum = _this._keyNum(event);
+
+            if (length === 0) {
+                return;
+            }
+
+            // Enter key
+            if (keynum === 13) {
+                event.preventDefault();
+                $active.click();
+            // Up/Down key
+            } else if (keynum === 40 || keynum === 38) {
+                event.preventDefault();
+                // Down key
+                if (keynum === 40) {
+                    if (index < length && $active.nextAll('.item').first().length > 0) {
+                        $active = $active.removeClass('active').nextAll('.item').first().addClass('active');
+                    } else {
+                        $active = $li.removeClass('active').filter('.item:first').addClass('active');
+                    }
+                // Up key
+                } else if (keynum === 38) {
+                    if (index > 0 && $active.prevAll('.item').first().length > 0) {
+                        $active = $active.removeClass('active').prevAll('.item').first().addClass('active');
+                    } else {
+                        $active = $li.removeClass('active').filter('.item:last').addClass('active');
+                    }
+                }
+
+                // Scroll to
+                var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
+                $ul.animate({
+                    scrollTop: position + $ul.scrollTop()
+                }, 100);
+            }
+        }).data('flexdatalist', true);
+    }
+
+/**
+ * Is variable empty.
+ */
+    this._isEmpty = function (value) {
+        if (!_this._isDefined(value)) {
+            return true;
+        } else if (value === null) {
+            return true;
+        } else if (value === true) {
+            return false;
+        } else if (this._length(value) === 0) {
+            return true;
+        } else if ($.trim(value) === '') {
+            return true;
+        }
+        return false;
+    }
+
+/**
+ * Is variable an object.
+ */
+    this._isObject = function (value) {
+        return (value && typeof value === 'object');
+    }
+
+/**
+ * To array.
+ */
+    this._csvToArray = function (value, _default) {
+        if (value.length === 0) {
+            return _default;
+        }
+        return typeof value === 'string' ? value.split(',') : value;
+    }
+
+/**
+ * Get length of variable.
+ */
+    this._length = function (value) {
+        if (this._isObject(value)) {
+            return Object.keys(value).length;
+        } else if (typeof value.length === 'number') {
+            return value.length;
+        }
+        return 0;
+    }
+/**
+ * Check if variable (and optionally property) is defined.
+ */
+    this._isDefined = function (variable, property) {
+        var _variable = (typeof variable !== 'undefined');
+        if (_variable && typeof property !== 'undefined') {
+            return (typeof variable[property] !== 'undefined');
+        }
+        return _variable;
+    }
+
     return this.each(input);
 }
 $(function () {

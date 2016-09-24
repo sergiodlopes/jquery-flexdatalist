@@ -1,6 +1,6 @@
 {
   "name": "jquery-flexdatalist",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "main": ["jquery.flexdatalist.js"],
   "dependencies": {
     "jquery": ">=1.7"
