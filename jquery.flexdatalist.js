@@ -743,11 +743,8 @@ jQuery.fn.flexdatalist = function(options, value) {
                         index = $container.index();
                     if (!$container.hasClass('disabled') && ($this._toJSON() || $this._toCSV())) {
                         var currentValue = $this._inputValue();
-                        console.log(currentValue);
                         currentValue.splice(index, 1);
                         _options._values.splice(index, 1);
-                        console.log(index);
-                        console.log(currentValue);
                         $this._inputValue(currentValue);
                     }
                     $container.remove();
