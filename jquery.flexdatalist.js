@@ -134,9 +134,6 @@ jQuery.fn.flexdatalist = function(options, value) {
             }).on('input keyup', function (event) {
                 if ($this._changed() && _this._keyNum(event) !== 13) {
                     var val = $this._keyword();
-                    if (!_options.multiple && !_options.selectionRequired) {
-                        $this._value(val);
-                    }
                     if (val.length >= _options.minLength) {
                         $this._search(function (matches) {
                             $this._showResults(matches);
@@ -144,8 +141,12 @@ jQuery.fn.flexdatalist = function(options, value) {
                     } else {
                         $this._removeResults();
                     }
-                    if (!_options.multiple && (val.length === 0 || val.length < _options.minLength)) {
-                        $this._value('');
+                    if (!_options.multiple) {
+                        if (!_options.selectionRequired) {
+                            $this._value(val);
+                        } else if (val.length === 0 || val.length < _options.minLength) {
+                            $this._value('');
+                        }
                     }
                 }
                 _previousText = $this._keyword();
