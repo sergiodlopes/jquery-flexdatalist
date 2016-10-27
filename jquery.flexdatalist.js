@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.7.2
+ * 1.7.3
  *
  * Depends:
  * jquery.js 1.7+
@@ -89,7 +89,13 @@ jQuery.fn.flexdatalist = function(options, value) {
         // Handle multiple values
         var $_this = $this
                 .clone(false)
-                .attr({'list': null, 'name': null})
+                .attr({
+                    'list': null,
+                    'name': null,
+                    'value': null,
+                    'id': ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : null)
+                })
+                .val('')
                 .addClass('flexdatalist-alias')
                 .removeClass('flexdatalist');
         if ($this._options('multiple')) {
@@ -222,8 +228,9 @@ jQuery.fn.flexdatalist = function(options, value) {
                 return;
             }
             $this._options('originalValue', $this.val());
+            // Allow to value be reset along with text after processing/search
+            // on init
             $this.val('');
-            $_this.val('');
             $this._parseValue(value, function (values) {
                 if (!_this._isEmpty(values)) {
                     $this._values(values);
@@ -266,10 +273,6 @@ jQuery.fn.flexdatalist = function(options, value) {
      * Get data.
      */
         $this._tdata = function (callback) {
-            // Prevent get data when pressing back button
-            if ($this.hasClass('flexdatalist-loading')) {
-                return;
-            }
             $this.trigger('before:flexdatalist.data');
             $this._url(function (remoteData) {
                 $this._data(function (data) {
@@ -292,14 +295,12 @@ jQuery.fn.flexdatalist = function(options, value) {
      * Get static data.
      */
         $this._data = function (callback) {
-            var _options = $this._options(),
-                keyword = $this._keyword();
-
+            var _options = $this._options();
             if (typeof _options.data === 'string') {
                 $this._remote({
                     url: _options.data,
                     success: function (data) {
-                        var _data = $this._remoteData(data);
+                        var _data = $this._getRemoteData(data);
                         _options.data = _data;
                         callback(_data);
                     }
@@ -315,9 +316,11 @@ jQuery.fn.flexdatalist = function(options, value) {
         $this._url = function (callback) {
             var _options = $this._options(),
                 keyword = $this._keyword(),
+                value = $this.val(),
+                originalValue = _options.originalValue,
                 cacheKey = keyword;
 
-            if (_this._isEmpty(_options.url) || (_options.minLength > keyword.length)) {
+            if (_this._isEmpty(_options.url)) {
                 return callback([]);
             }
 
@@ -339,18 +342,17 @@ jQuery.fn.flexdatalist = function(options, value) {
                     data: $.extend($this._relativesData(), _options.params, {
                             keyword: keyword,
                             contain: _options.searchContain,
-                            selected: $this.val()
+                            selected: value.length === 0 ? originalValue : value
                         }
                     ),
                     success: function (data) {
-                        $this.removeClass('flexdatalist-loading');
-                        var _data = $this._remoteData(data),
+                        var _data = $this._getRemoteData(data),
                             _keyword = $this._keyword();
                         if (_keyword.length > keyword.length) {
                             $this._search(function (matches) {
                                 $this._showResults(matches);
                             });                            
-                        } else if (_keyword.length >= _options.minLength) {
+                        } else {
                             callback(_data);
                         }
                         $this._cache(cacheKey, _data);
@@ -363,6 +365,10 @@ jQuery.fn.flexdatalist = function(options, value) {
      * AJAX request.
      */
         $this._remote = function (options) {
+            // Prevent get data when pressing back button
+            if ($this.hasClass('flexdatalist-loading')) {
+                return;
+            }
             $this.addClass('flexdatalist-loading');
             options = $.extend({
                 type: 'post',
@@ -377,7 +383,7 @@ jQuery.fn.flexdatalist = function(options, value) {
     /**
      * Extract remote data from server response.
      */
-        $this._remoteData = function (data) {
+        $this._getRemoteData = function (data) {
             var _data = data.results ? data.results : data;
             if (typeof _data === 'string' && _data.indexOf('[{') === 0) {
                 _data = JSON.parse(_data);
@@ -737,8 +743,11 @@ jQuery.fn.flexdatalist = function(options, value) {
                         index = $container.index();
                     if (!$container.hasClass('disabled') && ($this._toJSON() || $this._toCSV())) {
                         var currentValue = $this._inputValue();
+                        console.log(currentValue);
                         currentValue.splice(index, 1);
                         _options._values.splice(index, 1);
+                        console.log(index);
+                        console.log(currentValue);
                         $this._inputValue(currentValue);
                     }
                     $container.remove();
@@ -1139,5 +1148,5 @@ jQuery.fn.flexdatalist = function(options, value) {
     return this.each(input);
 }
 $(function () {
-    $('input.flexdatalist').flexdatalist();
+    $('input.flexdatalist:not(.flexdatalist-set)').flexdatalist();
 });
