@@ -92,10 +92,8 @@ jQuery.fn.flexdatalist = function(options, value) {
                 .attr({
                     'list': null,
                     'name': null,
-                    'value': null,
                     'id': ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : null)
                 })
-                .val('')
                 .addClass('flexdatalist-alias')
                 .removeClass('flexdatalist');
         if ($this._options('multiple')) {
@@ -228,10 +226,9 @@ jQuery.fn.flexdatalist = function(options, value) {
                 return;
             }
             $this._options('originalValue', $this.val());
-            // Allow to value be reset along with text after processing/search
-            // on init
-            $this.val('');
             $this._parseValue(value, function (values) {
+                $this.val('');
+                $_this.val('');
                 if (!_this._isEmpty(values)) {
                     $this._values(values);
                 }
@@ -317,7 +314,6 @@ jQuery.fn.flexdatalist = function(options, value) {
             var _options = $this._options(),
                 keyword = $this._keyword(),
                 value = $this.val(),
-                originalValue = _options.originalValue,
                 cacheKey = keyword;
 
             if (_this._isEmpty(_options.url)) {
@@ -342,7 +338,7 @@ jQuery.fn.flexdatalist = function(options, value) {
                     data: $.extend($this._relativesData(), _options.params, {
                             keyword: keyword,
                             contain: _options.searchContain,
-                            selected: value.length === 0 ? originalValue : value
+                            selected: value
                         }
                     ),
                     success: function (data) {
@@ -490,7 +486,7 @@ jQuery.fn.flexdatalist = function(options, value) {
 
             for (var index = 0; index < searchIn.length; index++) {
                 var searchProperty = searchIn[index];
-                if (!_this._isDefined(item, searchProperty)) {
+                if (!_this._isDefined(item, searchProperty) || !item[searchProperty]) {
                     continue;
                 }
                 var text = item[searchProperty].toString();
@@ -967,16 +963,14 @@ jQuery.fn.flexdatalist = function(options, value) {
                 'z-index': ($target.css('z-index') + 1)
             });
         }
-
         // Set datalist data
         $this._datalist();
-        // Initialize
-        $this._init();
         // Process default value
         $this._initValue();
         // Handle chained fields
         $this._chained();
-        _previousText = $this._keyword();
+        // Initialize
+        $this._init();
     };
 
 /**
