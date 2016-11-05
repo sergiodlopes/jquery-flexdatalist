@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.7.3
+ * 1.7.4
  *
  * Depends:
  * jquery.js 1.7+
@@ -137,8 +137,8 @@ jQuery.fn.flexdatalist = function(options, value) {
                 }
             }).on('input keyup', function (event) {
                 if ($this._changed() && _this._keyNum(event) !== 13) {
-                    var val = $this._keyword();
-                    if (val.length >= _options.minLength) {
+                    var keyword = $this._keyword();
+                    if (keyword.length >= _options.minLength) {
                         $this._search(function (matches) {
                             $this._showResults(matches);
                         });
@@ -147,8 +147,8 @@ jQuery.fn.flexdatalist = function(options, value) {
                     }
                     if (!_options.multiple) {
                         if (!_options.selectionRequired) {
-                            $this._value(val);
-                        } else if (val.length === 0 || val.length < _options.minLength) {
+                            $this._value(keyword);
+                        } else {
                             $this._value('');
                         }
                     }
