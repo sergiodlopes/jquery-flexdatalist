@@ -3,7 +3,7 @@
  * Autocomplete for input fields with support for datalists.
  *
  * Version:
- * 1.7.4
+ * 1.8.0
  *
  * Depends:
  * jquery.js 1.7+
@@ -16,7 +16,7 @@
  *
  */
 
-jQuery.fn.flexdatalist = function(options, value) {
+jQuery.fn.flexdatalist = function (options, value) {
     'use strict';
     var $document = $(document),
         $input = $(this),
@@ -26,7 +26,7 @@ jQuery.fn.flexdatalist = function(options, value) {
 /**
  * Each iteration.
  */
-    input = function() {
+    input = function () {
         var $this = $(this),
             _cache = {},
             _previousText = '',
@@ -40,12 +40,12 @@ jQuery.fn.flexdatalist = function(options, value) {
     /**
      * Option management.
      */
-        $this._options = function (option, value) {
+        $this._options = function (option, _value) {
             var _options = $this.data('flexdatalist');
             if (!_this._isDefined(option)) {
                 return $this.data('flexdatalist');
-            } else if (_this._isDefined(value)) {
-                _options[option] = value;
+            } else if (_this._isDefined(_value)) {
+                _options[option] = _value;
             } else if (!_this._isObject(option)) {
                 return (_this._isDefined(_options, option) ? _options[option] : null);
             } else {
@@ -81,6 +81,7 @@ jQuery.fn.flexdatalist = function(options, value) {
                 normalizeString: null,
                 multiple: $this.attr('multiple'),
                 maxShownResults: 100,
+                noResultsText: 'No results found',
                 toggleSelected: false, // New
                 _values: []
             }, options, $this.data())
@@ -134,6 +135,9 @@ jQuery.fn.flexdatalist = function(options, value) {
                 // Remove results on tab away
                 } else if (_this._keyNum(event) === 9) {
                     $this._removeResults();
+                // Check if is to remove previous value on backspace key
+                } else if (val.length === 0 && _options.multiple && _this._keyNum(event) === 8) {
+                    $_this.data('_remove', $_this.parents('li:eq(0)').prev());
                 }
             }).on('input keyup', function (event) {
                 if ($this._changed() && _this._keyNum(event) !== 13) {
@@ -152,6 +156,12 @@ jQuery.fn.flexdatalist = function(options, value) {
                             $this._value('');
                         }
                     }
+                }
+                // Remove previous value on backspace key
+                var $remove = $_this.data('_remove');
+                if ($remove) {
+                    $remove.find('.fdl-remove').click();
+                    $_this.data('_remove', null);
                 }
                 _previousText = $this._keyword();
             }).focus(function () {
@@ -175,7 +185,7 @@ jQuery.fn.flexdatalist = function(options, value) {
             if ($_this.attr('autofocus')) {
                 $_this.focus();
             }
-            window.onresize = function(event) {
+            window.onresize = function (event) {
                 $this._position();
             };
             $this.addClass('flexdatalist-set');
@@ -414,7 +424,7 @@ jQuery.fn.flexdatalist = function(options, value) {
                 list = $this.attr('list');
             if (!_this._isEmpty(list)) {
                 _options.data = [];
-                $('#' + list).find('option').each(function() {
+                $('#' + list).find('option').each(function () {
                     var val = $(this).val();
                     _options.data.push({
                         label: val,
@@ -525,13 +535,15 @@ jQuery.fn.flexdatalist = function(options, value) {
      * Show results.
      */
         $this._showResults = function (data) {
-            $this._removeResults();
-            var $ul = $this._getResultsContainer(),
-                _options = $this._options();
-
+            $this._removeResults(true);
+            var _options = $this._options();
             if (data.length === 0) {
+                $this._noResults(_options.noResultsText);
                 return;
-            } else if (!_options.groupBy) {
+            }
+
+            var $ul = $this._getResultsContainer();
+            if (!_options.groupBy) {
                 $this._items(data, $ul);
             } else {
                 data = $this._groupData(data);
@@ -563,18 +575,30 @@ jQuery.fn.flexdatalist = function(options, value) {
                     $this._selected(true)._removeResults()._value(item);
                     $this.trigger('select:flexdatalist', [item, _options]);
                 }
-            }).hover(function() {
+            }).hover(function () {
                 $li.removeClass('active');
                 $(this).addClass('active');
-            }, function() {
+            }, function () {
                 $(this).removeClass('active');
             });
 
             if (_options.focusFirstResult) {
                 $li.filter(':first').addClass('active');
             }
+        }
 
-            $this._position();
+    /**
+     * No results found text.
+     */
+        $this._noResults = function (text) {
+            if (_this._isEmpty(text)) {
+                return;
+            }
+            var $container = $this._getResultsContainer();
+            $('<li>')
+                .addClass('item no-results')
+                .append(text)
+                .appendTo($container)
         }
 
     /**
@@ -599,14 +623,14 @@ jQuery.fn.flexdatalist = function(options, value) {
     /**
      * Items iteration.
      */
-        $this._items = function (items, $ul) {
+        $this._items = function (items, $resultsContainer) {
             var max = $this._options('maxShownResults');
             $this.trigger('show:flexdatalist.results', [items]);
             for (var index = 0; index < items.length; index++) {
                 if (max > 0 && max === index) {
                     break;
                 }
-                $this._item(items[index]).appendTo($ul);
+                $this._item(items[index]).appendTo($resultsContainer);
             }
             $this.trigger('shown:flexdatalist.results', [items]);
         }
@@ -674,6 +698,7 @@ jQuery.fn.flexdatalist = function(options, value) {
                         'border-bottom-left-radius': $target.css("border-bottom-left-radius"),
                         'border-bottom-right-radius': $target.css("border-bottom-right-radius")
                     }).data('target', $_this);
+                $this._position();
             }
             return $container;
         }
@@ -681,8 +706,12 @@ jQuery.fn.flexdatalist = function(options, value) {
     /**
      * Remove results.
      */
-        $this._removeResults = function () {
-            $('ul.flexdatalist-results').remove();
+        $this._removeResults = function (itemsOnly) {
+            var selector = 'ul.flexdatalist-results';
+            if (itemsOnly) {
+                selector = 'ul.flexdatalist-results li';
+            }
+            $(selector).remove();
             return $this;
         }
 
@@ -1010,7 +1039,7 @@ jQuery.fn.flexdatalist = function(options, value) {
         } else if (!value) {
             var _data = $input.data('flexdatalist');
             return _data[options];
-        } else if (value) {
+        } else {
             var _data = $input.data('flexdatalist');
             _data[options] = value;
             $input.data('flexdatalist', _data);

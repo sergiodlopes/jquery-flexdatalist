@@ -29,6 +29,10 @@
     color: #fff;
     cursor: pointer;
 }
+.flexdatalist-results li.no-results {
+    font-style: italic;
+    color: #888;
+}
 
 /**
  * Grouped items
