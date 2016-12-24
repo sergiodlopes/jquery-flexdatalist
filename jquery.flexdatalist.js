@@ -81,7 +81,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                 normalizeString: null,
                 multiple: $this.attr('multiple'),
                 maxShownResults: 100,
-                noResultsText: 'No results found',
+                noResultsText: 'No results found for "{keyword}"',
                 toggleSelected: false, // New
                 _values: []
             }, options, $this.data())
@@ -594,7 +594,10 @@ jQuery.fn.flexdatalist = function (options, value) {
             if (_this._isEmpty(text)) {
                 return;
             }
-            var $container = $this._getResultsContainer();
+            var $container = $this._getResultsContainer(),
+                keyword = $this._keyword();
+                
+            text = text.split('{keyword}').join(keyword);
             $('<li>')
                 .addClass('item no-results')
                 .append(text)
