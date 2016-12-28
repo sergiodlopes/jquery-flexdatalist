@@ -1,9 +1,9 @@
 /**
  * jQuery Flexdatalist.
- * Autocomplete for input fields with support for datalists.
+ * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.8.0
+ * 1.8.2
  *
  * Depends:
  * jquery.js 1.7+
@@ -24,7 +24,7 @@ jQuery.fn.flexdatalist = function (options, value) {
         _this = this;
 
 /**
- * Each iteration.
+ * Input processing.
  */
     input = function () {
         var $this = $(this),
@@ -1031,6 +1031,28 @@ jQuery.fn.flexdatalist = function (options, value) {
     }
 
 /**
+ * Change value.
+ */
+    this._setValue = function (value) {
+        $input.each(function () {
+            var $_input = $(this);
+            var _data = $_input.data('flexdatalist');
+            _data['originalValue'] = value;
+            if (value == '' && _data.multiple) {
+                $_input
+                    .val('', true)
+                    .trigger('change:flexdatalist', [value, value, _data])
+                    .trigger('change')
+                    .next('ul.flexdatalist-multiple')
+                    .find('li.value')
+                    .remove();
+                return;
+            }
+            _this._destroy();
+        });
+    }
+
+/**
  * Get key code from event.
  */
     this._keyNum = function (event) {
@@ -1156,15 +1178,12 @@ jQuery.fn.flexdatalist = function (options, value) {
             if (!this['_' + options]()) {
                 return this;
             }
+        // set value programmatically
+        } else if (options === 'value') {
+            this._setValue(value);
         } else if (!value) {
             var _data = $input.data('flexdatalist');
             return _data[options];
-        // set value programmatically
-        } else if (options === 'value') {
-            var _data = $input.data('flexdatalist');
-            _data['originalValue'] = value;
-            _this._destroy();
-            $input.data('flexdatalist', _data);
         } else {
             var _data = $input.data('flexdatalist');
             _data[options] = value;
