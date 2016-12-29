@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.8.2
+ * 1.8.3
  *
  * Depends:
  * jquery.js 1.7+
@@ -425,9 +425,11 @@ jQuery.fn.flexdatalist = function (options, value) {
             if (!_this._isEmpty(list)) {
                 _options.data = [];
                 $('#' + list).find('option').each(function () {
-                    var val = $(this).val();
+                    var $option = $(this),
+                        val = $option.val(),
+                        label = $option.text();
                     _options.data.push({
-                        label: val,
+                        label: (label.length > 0 ? label : val),
                         value: val
                     });
                 });
