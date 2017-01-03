@@ -411,8 +411,12 @@ jQuery.fn.flexdatalist = function (options, value) {
             if (relatives) {
                 data['relatives'] = {};
                 relatives.each(function () {
-                    var $input = $(this);
-                    data['relatives'][$input.attr('name')] = $input.val();
+                    var $input = $(this),
+                        name = $input.attr('name')
+                            .split('[').join('-')
+                            .split(']').join('-')
+                            .replace(/^\|+|\-+$/g, '');
+                    data['relatives'][name] = $input.val();
                 });
             }
             return data;
