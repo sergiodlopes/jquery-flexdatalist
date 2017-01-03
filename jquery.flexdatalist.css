@@ -68,6 +68,10 @@
     text-align: left;
     cursor: text;
 }
+.flexdatalist-multiple.disabled {
+    background-color: #eee;
+    cursor: default;
+}
 .flexdatalist-multiple:after {
     content: '';
     display: block;

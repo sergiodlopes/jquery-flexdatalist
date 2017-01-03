@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.8.4
+ * 1.8.5
  *
  * Depends:
  * jquery.js 1.7+
@@ -101,7 +101,6 @@ jQuery.fn.flexdatalist = function (options, value) {
             var $ulMultiple = $('<ul>')
                 .addClass('flexdatalist-multiple')
                 .css({
-                    'background-color': $this.css('background-color'),
                     'border-color': $this.css('border-left-color'),
                     'border-width': $this.css('border-left-width'),
                     'border-style': $this.css('border-left-style'),
@@ -217,6 +216,9 @@ jQuery.fn.flexdatalist = function (options, value) {
                         if (_options.multiple) {
                             $ulMultiple.find('li .remove').click();
                         }
+                    }
+                    if ($ulMultiple) {
+                        disabled && $ulMultiple ? $ulMultiple.addClass('disabled') : $ulMultiple.removeClass('disabled');
                     }
                 });
             }
