@@ -1045,21 +1045,23 @@ jQuery.fn.flexdatalist = function (options, value) {
         $input.each(function () {
             var $_input = $(this);
             var _data = $_input.data('flexdatalist');
-            _data['originalValue'] = value;
-            if (value == '') {
-                $_input
-                    .val(value, true)
-                    .trigger('change:flexdatalist', [value, value, _data])
-                    .trigger('change');
-                if (_data.multiple) {
+            if (_data) {
+                _data['originalValue'] = value;
+                if (value == '') {
                     $_input
-                        .next('ul.flexdatalist-multiple')
-                        .find('li.value')
-                        .remove();
+                        .val(value, true)
+                        .trigger('change:flexdatalist', [value, value, _data])
+                        .trigger('change');
+                    if (_data.multiple) {
+                        $_input
+                            .next('ul.flexdatalist-multiple')
+                            .find('li.value')
+                            .remove();
+                    }
+                    return;
                 }
-                return;
+                _this._destroy();
             }
-            _this._destroy();
         });
     }
 
