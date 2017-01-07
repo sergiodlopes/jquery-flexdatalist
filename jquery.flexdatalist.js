@@ -28,6 +28,8 @@ jQuery.fn.flexdatalist = function (options, value) {
  */
     input = function () {
         var $this = $(this),
+            $_this,
+            $ulMultiple,
             _cache = {},
             _previousText = '',
             _requestTimeout = null,
@@ -38,57 +40,55 @@ jQuery.fn.flexdatalist = function (options, value) {
         }
 
     /**
+     * Set options.
+     */
+        _this._options(
+            $this,
+            $.extend(
+                {
+                    url: null,
+                    data: [],
+                    params: {},
+                    relatives: null,
+                    chainedRelatives: false,
+                    cache: true,
+                    minLength: 2,
+                    groupBy: false,
+                    selectionRequired: false,
+                    focusFirstResult: false,
+                    textProperty: null,
+                    valueProperty: null,
+                    visibleProperties: [],
+                    searchIn: ['label'],
+                    searchContain: false,
+                    searchEqual: false,
+                    searchDisabled: false, // New
+                    normalizeString: null,
+                    multiple: $this.attr('multiple'),
+                    maxShownResults: 100,
+                    noResultsText: 'No results found for "{keyword}"',
+                    toggleSelected: false, // New
+                    _values: []
+                },
+                $this.data(),
+                (typeof options === 'object' ? options : {})
+            )
+        );
+
+    /**
      * Option management.
      */
         $this._options = function (option, _value) {
-            var _options = $this.data('flexdatalist');
-            if (!_this._isDefined(option)) {
-                return $this.data('flexdatalist');
-            } else if (_this._isDefined(_value)) {
-                _options[option] = _value;
-            } else if (!_this._isObject(option)) {
-                return (_this._isDefined(_options, option) ? _options[option] : null);
-            } else {
-                _options = option;
-            }
-
-            _options.searchIn = _this._csvToArray(_options.searchIn);
-            _options.relatives = _options.relatives && $(_options.relatives).length > 0 ? $(_options.relatives) : null;
-            _options.textProperty = _options.textProperty === null ? _options.searchIn[0] : _options.textProperty;
-            _options.visibleProperties = _this._csvToArray(_options.visibleProperties, _options.searchIn);
-            $this.data('flexdatalist', _options);
-            return $this;
+            return _this._options($this, option, _value);
         }
 
-        $this._options($.extend({
-                url: null,
-                data: [],
-                params: {},
-                relatives: null,
-                chainedRelatives: false,
-                cache: true,
-                minLength: 2,
-                groupBy: false,
-                selectionRequired: false,
-                focusFirstResult: false,
-                textProperty: null,
-                valueProperty: null,
-                visibleProperties: [],
-                searchIn: ['label'],
-                searchContain: false,
-                searchEqual: false,
-                searchDisabled: false, // New
-                normalizeString: null,
-                multiple: $this.attr('multiple'),
-                maxShownResults: 100,
-                noResultsText: 'No results found for "{keyword}"',
-                toggleSelected: false, // New
-                _values: []
-            }, options, $this.data())
-        );
-
-        // Handle multiple values
-        var $_this = $this
+    /**
+     * Initialize.
+     */
+        $this._init = function () {
+            var _options = $this._options();            
+            // Handle multiple values
+            $_this = $this
                 .clone(false)
                 .attr({
                     'list': null,
@@ -97,32 +97,31 @@ jQuery.fn.flexdatalist = function (options, value) {
                 })
                 .addClass('flexdatalist-alias')
                 .removeClass('flexdatalist');
-        if ($this._options('multiple')) {
-            var $ulMultiple = $('<ul>')
-                .addClass('flexdatalist-multiple')
-                .css({
-                    'border-color': $this.css('border-left-color'),
-                    'border-width': $this.css('border-left-width'),
-                    'border-style': $this.css('border-left-style'),
-                    'border-radius': $this.css('border-top-left-radius')
-                })
-                .insertAfter($this).click(function () {
-                    $(this).find('input').focus();
-                });
-            var $li = $('<li class="input-container">')
-                .addClass('flexdatalist-multiple-value')
-                .append($_this)
-                .appendTo($ulMultiple);
-        } else {
-            $_this.insertAfter($this);
-        }
-        $this.addClass('flexdatalist').attr('type', 'hidden');
-
-    /**
-     * Initialize.
-     */
-        $this._init = function () {
-            var _options = $this._options();
+            if ($this._options('multiple')) {
+                $ulMultiple = $('<ul>')
+                    .addClass('flexdatalist-multiple')
+                    .css({
+                        'border-color': $this.css('border-left-color'),
+                        'border-width': $this.css('border-left-width'),
+                        'border-style': $this.css('border-left-style'),
+                        'border-radius': $this.css('border-top-left-radius')
+                    })
+                    .insertAfter($this).click(function () {
+                        $(this).find('input').focus();
+                    });
+                $('<li class="input-container">')
+                    .addClass('flexdatalist-multiple-value')
+                    .append($_this)
+                    .appendTo($ulMultiple);
+            } else {
+                $_this.insertAfter($this);
+            }
+            
+            // Respect autofocus attribute
+            if ($_this.attr('autofocus')) {
+                $_this.focus();
+            }
+            
             // Listen to parent input key presses and state events.
             $_this.on('input keydown', function (event) {
                 var val = $this._keyword();
@@ -180,14 +179,10 @@ jQuery.fn.flexdatalist = function (options, value) {
             })
             .attr('autocomplete', 'off');
 
-            // Respect autofocus attribute
-            if ($_this.attr('autofocus')) {
-                $_this.focus();
-            }
             window.onresize = function (event) {
                 $this._position();
             };
-            $this.addClass('flexdatalist-set');
+            $this.addClass('flexdatalist flexdatalist-set').attr('type', 'hidden');
         }
 
     /**
@@ -293,7 +288,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                         if (values && values.indexOf($this._getText(item)) > -1) {
                             delete data[i];
                         }
-                    }                    
+                    }
                     $this.trigger('after:flexdatalist.data', [data]);
                     callback(data);
                 });
@@ -411,12 +406,13 @@ jQuery.fn.flexdatalist = function (options, value) {
             if (relatives) {
                 data['relatives'] = {};
                 relatives.each(function () {
-                    var $input = $(this),
-                        name = $input.attr('name')
-                            .split('[').join('-')
+                    var $_input = $(this),
+                        name = $_input.attr('name')
+                            .split('][').join('-')
                             .split(']').join('-')
+                            .split('[').join('-')
                             .replace(/^\|+|\-+$/g, '');
-                    data['relatives'][name] = $input.val();
+                    data['relatives'][name] = $_input.val();
                 });
             }
             return data;
@@ -1003,14 +999,14 @@ jQuery.fn.flexdatalist = function (options, value) {
                 'z-index': ($target.css('z-index') + 1)
             });
         }
+        // Initialize
+        $this._init();
         // Set datalist data
         $this._datalist();
         // Process default value
         $this._initValue();
         // Handle chained fields
         $this._chained();
-        // Initialize
-        $this._init();
     };
 
 /**
@@ -1025,7 +1021,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             $(this).removeClass('flexdatalist-set')
                 .attr('type', 'text')
                 .val((data && data.originalValue ? data.originalValue : ''))
-                .data('flexdatalist', null)
+                .removeData('flexdatalist')
                 .next('.flexdatalist-alias, ul.flexdatalist-multiple')
                 .remove();
         });
@@ -1184,6 +1180,29 @@ jQuery.fn.flexdatalist = function (options, value) {
     }
 
 /**
+ * Option management.
+ */
+    this._options = function ($target, option, _value) {
+        var _targetOpts = $target.data('flexdatalist');
+        if (_this._isDefined(option)) {
+            if (_this._isDefined(_value)) {
+                _targetOpts[option] = _value;
+            } else if (!_this._isObject(option)) {
+                return (_this._isDefined(_targetOpts, option) ? _targetOpts[option] : null);
+            } else {
+                _targetOpts = option;
+            }
+            // normalize options
+            _targetOpts.searchIn = _this._csvToArray(_targetOpts.searchIn);
+            _targetOpts.relatives = _targetOpts.relatives && $(_targetOpts.relatives).length > 0 ? $(_targetOpts.relatives) : null;
+            _targetOpts.textProperty = _targetOpts.textProperty === null ? _targetOpts.searchIn[0] : _targetOpts.textProperty;
+            _targetOpts.visibleProperties = _this._csvToArray(_targetOpts.visibleProperties, _targetOpts.searchIn);
+            $target.data('flexdatalist', _targetOpts);
+        }
+        return _targetOpts;
+    }
+
+/**
  * Handle options.
  */
     if (typeof options === 'string') {
@@ -1195,12 +1214,9 @@ jQuery.fn.flexdatalist = function (options, value) {
         } else if (options === 'value') {
             this._setValue(value);
         } else if (!value) {
-            var _data = $input.data('flexdatalist');
-            return _data[options];
+            return _this._options($input.data('flexdatalist'), options);
         } else {
-            var _data = $input.data('flexdatalist');
-            _data[options] = value;
-            $input.data('flexdatalist', _data);
+            _this._options($input, options, value);
             return this;
         }
     }
