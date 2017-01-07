@@ -86,7 +86,7 @@ jQuery.fn.flexdatalist = function (options, value) {
      * Initialize.
      */
         $this._init = function () {
-            var _options = $this._options();            
+            var _options = $this._options();
             // Handle multiple values
             $_this = $this
                 .clone(false)
@@ -116,12 +116,12 @@ jQuery.fn.flexdatalist = function (options, value) {
             } else {
                 $_this.insertAfter($this);
             }
-            
+
             // Respect autofocus attribute
             if ($_this.attr('autofocus')) {
                 $_this.focus();
             }
-            
+
             // Listen to parent input key presses and state events.
             $_this.on('input keydown', function (event) {
                 var val = $this._keyword();
@@ -340,12 +340,19 @@ jQuery.fn.flexdatalist = function (options, value) {
                     return;
                 }
 
+                delete _options.relatives;
+                delete _options._values;
+
                 $this._remote({
                     url: _options.url,
-                    data: $.extend($this._relativesData(), _options.params, {
+                    data: $.extend(
+                        $this._relativesData(),
+                        _options.params,
+                        {
                             keyword: keyword,
                             contain: _options.searchContain,
-                            selected: value
+                            selected: value,
+                            options: _options
                         }
                     ),
                     success: function (data) {
@@ -354,7 +361,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                         if (_keyword.length > keyword.length) {
                             $this._search(function (matches) {
                                 $this._showResults(matches);
-                            });                            
+                            });
                         } else {
                             callback(_data);
                         }
@@ -390,6 +397,9 @@ jQuery.fn.flexdatalist = function (options, value) {
             var _data = data.results ? data.results : data;
             if (typeof _data === 'string' && _data.indexOf('[{') === 0) {
                 _data = JSON.parse(_data);
+            }
+            if (_data.options) {
+                _this._options($this, _data.options);
             }
             if (_this._isObject(_data)) {
                 return _data;
@@ -600,7 +610,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             }
             var $container = $this._getResultsContainer(),
                 keyword = $this._keyword();
-                
+
             text = text.split('{keyword}').join(keyword);
             $('<li>')
                 .addClass('item no-results')
