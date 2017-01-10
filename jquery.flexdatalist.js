@@ -126,7 +126,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             $_this.on('input keydown', function (event) {
                 var val = $this._keyword();
                 // Comma separated values
-                if (_this._keyNum(event) === 188 && !_options.selectionRequired && _options.multiple) {
+                if ((_this._keyNum(event) === 188 || _this._keyNum(event) === 13) && !_options.selectionRequired && _options.multiple) {
                     event.preventDefault();
                     $this._value(val);
                     $this._removeResults();
@@ -209,7 +209,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                         $this._value('');
                         $_this.val('');
                         if (_options.multiple) {
-                            $ulMultiple.find('li .remove').click();
+                            $ulMultiple.find('li .fdl-remove').click();
                         }
                     }
                     if ($ulMultiple) {
@@ -339,9 +339,15 @@ jQuery.fn.flexdatalist = function (options, value) {
                     callback(cachedData);
                     return;
                 }
-
-                delete _options.relatives;
-                delete _options._values;
+                
+                var _opts = {};
+                $.each(_options, function (option, value) {
+                    if (option.indexOf('_') == 0) {
+                        return;
+                    }
+                    _opts[option] = value;
+                });
+                delete _opts.relatives;
 
                 $this._remote({
                     url: _options.url,
@@ -352,7 +358,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                             keyword: keyword,
                             contain: _options.searchContain,
                             selected: value,
-                            options: _options
+                            options: _opts
                         }
                     ),
                     success: function (data) {
