@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.8.5
+ * 1.8.6
  *
  * Depends:
  * jquery.js 1.7+
@@ -62,12 +62,14 @@ jQuery.fn.flexdatalist = function (options, value) {
                     searchIn: ['label'],
                     searchContain: false,
                     searchEqual: false,
-                    searchDisabled: false, // New
+                    searchDisabled: false,
                     normalizeString: null,
                     multiple: $this.attr('multiple'),
                     maxShownResults: 100,
                     noResultsText: 'No results found for "{keyword}"',
-                    toggleSelected: false, // New
+                    toggleSelected: false,
+                    allowDuplicateValues: false,
+                    requestType: 'post',
                     _values: []
                 },
                 $this.data(),
@@ -126,7 +128,8 @@ jQuery.fn.flexdatalist = function (options, value) {
             $_this.on('input keydown', function (event) {
                 var val = $this._keyword();
                 // Comma separated values
-                if ((_this._keyNum(event) === 188 || _this._keyNum(event) === 13) && !_options.selectionRequired && _options.multiple) {
+                if ((_this._keyNum(event) === 188 || _this._keyNum(event) === 13)
+                    && !_options.selectionRequired && _options.multiple) {
                     event.preventDefault();
                     $this._value(val);
                     $this._removeResults();
@@ -387,7 +390,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             }
             $this.addClass('flexdatalist-loading');
             options = $.extend({
-                type: 'post',
+                type: $this._options('requestType'),
                 dataType: 'json',
                 complete: function () {
                     $this.removeClass('flexdatalist-loading');
@@ -771,7 +774,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                 text = $this._getText(val),
                 value = $this._getValue(val);
 
-            if (text.length > 0) {
+            if (text.length > 0 && !_options.allowDuplicateValues) {
                 _options._values.push(text);
             }
 
@@ -1057,7 +1060,7 @@ jQuery.fn.flexdatalist = function (options, value) {
         $input.each(function () {
             var $_input = $(this);
             var _data = $_input.data('flexdatalist');
-            if (_data) {
+            if (_this._isDefined(_data)) {
                 _data['originalValue'] = value;
                 if (value == '') {
                     $_input
