@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.8.6
+ * 1.8.7
  *
  * Depends:
  * jquery.js 1.7+
@@ -70,6 +70,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     toggleSelected: false,
                     allowDuplicateValues: false,
                     requestType: 'post',
+                    limitOfValues: 0,
                     _values: []
                 },
                 $this.data(),
@@ -797,6 +798,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                         currentValue.splice(index, 1);
                         _options._values.splice(index, 1);
                         $this._inputValue(currentValue);
+                        $this._allowValues();
                     }
                     $container.remove();
                 });
@@ -848,6 +850,8 @@ jQuery.fn.flexdatalist = function (options, value) {
                 }
                 return value;
             }
+            
+            $this._allowValues();
 
             if (_this._isObject(value)) {
                 if (isJSON && !_this._isEmpty(value)) {
@@ -964,6 +968,17 @@ jQuery.fn.flexdatalist = function (options, value) {
                 return properties;
             }
             return false;
+        }
+
+    /**
+     * Toggle input visibility in multiple values setup.
+     */
+        $this._allowValues = function () {
+            var _options = $this._options();
+            if (_options.limitOfValues > 0 && _options.multiple) {
+                var $inputItem = $ulMultiple.find('.flexdatalist-multiple-value');
+                (_options._values.length >= _options.limitOfValues ? $inputItem.hide() : $inputItem.show());
+            }
         }
 
     /**
