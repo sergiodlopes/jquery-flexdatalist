@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.8.7
+ * 1.9.0
  *
  * Depends:
  * jquery.js 1.7+
@@ -62,6 +62,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     searchIn: ['label'],
                     searchContain: false,
                     searchEqual: false,
+                    searchByWord: true,
                     searchDisabled: false,
                     normalizeString: null,
                     multiple: $this.attr('multiple'),
@@ -166,7 +167,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     $_this.data('_remove', null);
                 }
                 _previousText = $this._keyword();
-            }).focus(function () {
+            }).on('focus', function () {
                 var val = $this._keyword();
                 if (_options.minLength === 0) {
                     if (val === '') {
@@ -179,6 +180,11 @@ jQuery.fn.flexdatalist = function (options, value) {
                     $this._search(function (matches) {
                         $this._showResults(matches);
                     });
+                }
+            }).on('blur', function () {
+                // Set value user leaves string in field onblur
+                if (_options.multiple && !_options.selectionRequired) {
+                    $this._value($this._keyword());
                 }
             })
             .attr('autocomplete', 'off');
@@ -338,12 +344,14 @@ jQuery.fn.flexdatalist = function (options, value) {
                 }
 
                 // Check cache
+                /*
                 var cachedData = $this._cache(cacheKey);
-                if (cachedData) {
+                if (cachedData && _options.cache) {
                     callback(cachedData);
                     return;
                 }
-                
+                */
+
                 var _opts = {};
                 $.each(_options, function (option, value) {
                     if (option.indexOf('_') == 0) {
@@ -493,15 +501,22 @@ jQuery.fn.flexdatalist = function (options, value) {
                 if (typeof keywords === 'string') {
                     keywords = [keywords];
                 }
-                $this.trigger('before:flexdatalist.search', [keywords, data]);
-                for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
-                    var keyword = keywords[kwindex];
-                    for (var index = 0; index < data.length; index++) {
-                        var _data = $this._matches(data[index], keyword, _options.values);
-                        if (!_data) {
-                            continue;
+
+                if (_options.searchByWord) {
+                    for (var index = 0; index < keywords.length; index++) {
+                        var keyword = keywords[index];
+                        if (keyword.indexOf(' ') > 0) {
+                            var words = keyword.split(' ');
+                            $.merge(keywords, words);
                         }
-                        matches.push(_data);
+                    }
+                }
+
+                $this.trigger('before:flexdatalist.search', [keywords, data]);
+                for (var index = 0; index < data.length; index++) {
+                    var item = $this._matches(data[index], keywords);
+                    if (item) {
+                        matches.push(item);
                     }
                 }
                 $this.trigger('after:flexdatalist.search', [keywords, data, matches]);
@@ -512,7 +527,7 @@ jQuery.fn.flexdatalist = function (options, value) {
     /**
      * Match against searchable properties.
      */
-        $this._matches = function (item, keyword, values) {
+        $this._matches = function (item, keywords) {
             var hasMatches = false,
                 _item = $.extend({}, item),
                 _options = $this._options(),
@@ -524,9 +539,16 @@ jQuery.fn.flexdatalist = function (options, value) {
                     continue;
                 }
                 var text = item[searchProperty].toString();
-                if ($this._find(keyword, text)) {
-                    _item[searchProperty + '_highlight'] = $this._highlight(keyword, text);
-                    hasMatches = true;
+                var highlight = text;
+                for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
+                    var keyword = keywords[kwindex];
+                    if ($this._find(keyword, text)) {
+                        highlight = $this._highlight(keyword, highlight);
+                        hasMatches = true;
+                    }
+                }
+                if (highlight !== text) {
+                    _item[searchProperty + '_highlight'] = highlight;
                 }
             }
             return hasMatches ? _item : null;
@@ -850,7 +872,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                 }
                 return value;
             }
-            
+
             $this._allowValues();
 
             if (_this._isObject(value)) {
@@ -1122,6 +1144,11 @@ jQuery.fn.flexdatalist = function (options, value) {
 
             if (length === 0) {
                 return;
+            }
+
+            // on escape key, remove results
+            if (_this._keyNum(event) === 27) {
+                return $ul.remove();
             }
 
             // Enter key
