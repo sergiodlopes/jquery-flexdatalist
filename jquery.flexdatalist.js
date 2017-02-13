@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.9.0
+ * 1.9.1
  *
  * Depends:
  * jquery.js 1.7+
@@ -204,7 +204,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             window.onresize = function (event) {
                 $this._position();
             };
-            $this.addClass('flexdatalist flexdatalist-set').attr('type', 'hidden');
+            $this.addClass('flexdatalist flexdatalist-set').prop('type', 'hidden');
         }
 
     /**
@@ -847,12 +847,14 @@ jQuery.fn.flexdatalist = function (options, value) {
                     return $this;
                 }
                 $_this.val('');
-                var $li = $('<li>')
+                var $inputContainer = $ulMultiple.find('li.input-container'),
+                    $li = $('<li>')
                         .addClass('value' + (_options.toggleSelected ? ' toggle' : ''))
                         .append('<span class="text">' + text + '</span>')
                         .append('<span class="fdl-remove">&times;</span>')
-                        .insertBefore($ulMultiple.find('li.input-container'));
-
+                        .insertBefore($inputContainer);
+                // Refocus input
+                $inputContainer.find('input').focus();
                 $li.find('span.fdl-remove').click(function () {
                     var $container = $(this).parent(),
                         index = $container.index();
