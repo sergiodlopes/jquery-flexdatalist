@@ -62,7 +62,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     searchIn: ['label'],
                     searchContain: false,
                     searchEqual: false,
-                    searchByWord: true,
+                    searchByWord: false,
                     searchDisabled: false,
                     normalizeString: null,
                     multiple: $this.attr('multiple'),
@@ -70,7 +70,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     noResultsText: 'No results found for "{keyword}"',
                     toggleSelected: false,
                     allowDuplicateValues: false,
-                    requestType: 'post',
+                    requestType: 'get',
                     limitOfValues: 0,
                     _values: []
                 },
@@ -108,7 +108,8 @@ jQuery.fn.flexdatalist = function (options, value) {
                         'border-color': $this.css('border-left-color'),
                         'border-width': $this.css('border-left-width'),
                         'border-style': $this.css('border-left-style'),
-                        'border-radius': $this.css('border-top-left-radius')
+                        'border-radius': $this.css('border-top-left-radius'),
+                        'background-color': $this.css('background-color')
                     })
                     .insertAfter($this).click(function () {
                         $(this).find('input').focus();
@@ -127,11 +128,15 @@ jQuery.fn.flexdatalist = function (options, value) {
             }
 
             // Listen to parent input key presses and state events.
-            $_this.on('input keydown', function (event) {
+            $_this
+            // Keydown
+            .on('input keydown', function (event) {
                 var val = $this._keyword();
                 // Comma separated values
                 if ((_this._keyNum(event) === 188 || _this._keyNum(event) === 13)
-                    && !_options.selectionRequired && _options.multiple) {
+                    && !_options.selectionRequired
+                    && _options.multiple
+                    && !$this._resultSelected()) {
                     event.preventDefault();
                     $this._value(val);
                     $this._removeResults();
@@ -142,22 +147,25 @@ jQuery.fn.flexdatalist = function (options, value) {
                 } else if (val.length === 0 && _options.multiple && _this._keyNum(event) === 8) {
                     $_this.data('_remove', $_this.parents('li:eq(0)').prev());
                 }
+
+            // Keyup
             }).on('input keyup', function (event) {
                 if ($this._changed() && _this._keyNum(event) !== 13) {
                     var keyword = $this._keyword();
+                    if (!_options.multiple) {
+                        _options._values = [];
+                        if (!_options.selectionRequired) {
+                            $this._value(keyword);
+                        } else {
+                            $this._value('');
+                        }
+                    }
                     if (keyword.length >= _options.minLength) {
                         $this._search(function (matches) {
                             $this._showResults(matches);
                         });
                     } else {
                         $this._removeResults();
-                    }
-                    if (!_options.multiple) {
-                        if (!_options.selectionRequired) {
-                            $this._value(keyword);
-                        } else {
-                            $this._value('');
-                        }
                     }
                 }
                 // Remove previous value on backspace key
@@ -167,6 +175,8 @@ jQuery.fn.flexdatalist = function (options, value) {
                     $_this.data('_remove', null);
                 }
                 _previousText = $this._keyword();
+
+            // Focus
             }).on('focus', function () {
                 var val = $this._keyword();
                 if (_options.minLength === 0) {
@@ -181,9 +191,11 @@ jQuery.fn.flexdatalist = function (options, value) {
                         $this._showResults(matches);
                     });
                 }
+
+            // Blur
             }).on('blur', function () {
                 // Set value user leaves string in field onblur
-                if (_options.multiple && !_options.selectionRequired) {
+                if (!$this._resultSelected() && _options.multiple && !_options.selectionRequired) {
                     $this._value($this._keyword());
                 }
             })
@@ -193,6 +205,13 @@ jQuery.fn.flexdatalist = function (options, value) {
                 $this._position();
             };
             $this.addClass('flexdatalist flexdatalist-set').attr('type', 'hidden');
+        }
+
+    /**
+     * Check search result is selected.
+     */
+        $this._resultSelected = function () {
+            return $('ul.flexdatalist-results').find('li.item.active').length > 0;
         }
 
     /**
@@ -498,21 +517,10 @@ jQuery.fn.flexdatalist = function (options, value) {
                 if (!_this._isDefined(keywords)) {
                     keywords = $this._keyword();
                 }
-                if (typeof keywords === 'string') {
-                    keywords = [keywords];
-                }
-
-                if (_options.searchByWord) {
-                    for (var index = 0; index < keywords.length; index++) {
-                        var keyword = keywords[index];
-                        if (keyword.indexOf(' ') > 0) {
-                            var words = keyword.split(' ');
-                            $.merge(keywords, words);
-                        }
-                    }
-                }
 
                 $this.trigger('before:flexdatalist.search', [keywords, data]);
+                //console.log(keywords);
+                keywords = $this._split(keywords);
                 for (var index = 0; index < data.length; index++) {
                     var item = $this._matches(data[index], keywords);
                     if (item) {
@@ -531,27 +539,34 @@ jQuery.fn.flexdatalist = function (options, value) {
             var hasMatches = false,
                 _item = $.extend({}, item),
                 _options = $this._options(),
+                found = [],
                 searchIn = _options.searchIn;
 
-            for (var index = 0; index < searchIn.length; index++) {
-                var searchProperty = searchIn[index];
-                if (!_this._isDefined(item, searchProperty) || !item[searchProperty]) {
-                    continue;
-                }
-                var text = item[searchProperty].toString();
-                var highlight = text;
-                for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
-                    var keyword = keywords[kwindex];
-                    if ($this._find(keyword, text)) {
-                        highlight = $this._highlight(keyword, highlight);
-                        hasMatches = true;
+            if (keywords.length > 0) {
+                for (var index = 0; index < searchIn.length; index++) {
+                    var searchProperty = searchIn[index];
+                    if (!_this._isDefined(item, searchProperty) || !item[searchProperty]) {
+                        continue;
+                    }
+                    var text = item[searchProperty].toString(),
+                        highlight = text,
+                        strings = $this._split(text);
+                    for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
+                        var keyword = keywords[kwindex];
+                        if ($this._find(keyword, strings)) {
+                            found.push(keyword);
+                            highlight = $this._highlight(keyword, highlight);
+                        }
+                    }
+                    if (highlight !== text) {
+                        _item[searchProperty + '_highlight'] = highlight;
                     }
                 }
-                if (highlight !== text) {
-                    _item[searchProperty + '_highlight'] = highlight;
-                }
+            }                
+            if (found.length == 0 || (_options.searchByWord && found.length < (keywords.length - 1))) {
+                return false;
             }
-            return hasMatches ? _item : null;
+            return _item;
         }
 
     /**
@@ -565,16 +580,42 @@ jQuery.fn.flexdatalist = function (options, value) {
         }
 
     /**
-     * Search for keyword in string.
+     * Search for keyword(s) in string.
      */
-        $this._find = function (keyword, text) {
+        $this._find = function (keyword, strings) {
             var _options = $this._options();
-            text = $this._normalizeString(text),
-            keyword = $this._normalizeString(keyword);
-            if (_options.searchEqual) {
-                return text == keyword;
+            for (var index = 0; index < strings.length; index++) {
+                var text = strings[index];
+                text = $this._normalizeString(text),
+                keyword = $this._normalizeString(keyword);
+                if (_options.searchEqual && text == keyword) {
+                    return true;
+                }
+                if ((_options.searchContain ? (text.indexOf(keyword) >= 0) : (text.indexOf(keyword) === 0))) {
+                    return true;
+                }
             }
-            return (_options.searchContain ? (text.indexOf(keyword) >= 0) : (text.indexOf(keyword) === 0));
+            return false;
+        }
+
+    /**
+     * Split string by words if needed.
+     */
+        $this._split = function (keywords) {
+            if (typeof keywords === 'string') {
+                keywords = [keywords];
+            }
+            var _options = $this._options();
+            if (_options.searchByWord) {
+                for (var index = 0; index < keywords.length; index++) {
+                    var keyword = $.trim(keywords[index]);
+                    if (keyword.indexOf(' ') > 0) {
+                        var words = keyword.split(' ');
+                        $.merge(keywords, words);
+                    }
+                }
+            }
+            return keywords;
         }
 
     /**
@@ -1051,8 +1092,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             $('ul.flexdatalist-results').css({
                 'width': $target.outerWidth() + 'px',
                 'top': (($target.offset().top + $target.outerHeight())) + 'px',
-                'left': $target.offset().left + 'px',
-                'z-index': ($target.css('z-index') + 1)
+                'left': $target.offset().left + 'px'
             });
         }
         // Initialize

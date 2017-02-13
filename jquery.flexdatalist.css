@@ -63,7 +63,7 @@
 .flexdatalist-multiple {
     width: 100%;
     margin: 0;
-    padding: 0 0 0 10px;
+    padding: 0;
     list-style: none;
     text-align: left;
     cursor: text;
@@ -80,7 +80,7 @@
 .flexdatalist-multiple li {
     display: inline-block;
     position: relative;
-    margin: 5px 5px 5px 0;
+    margin: 5px;
     float: left;
 }
 .flexdatalist-multiple li.input-container,
@@ -88,14 +88,16 @@
     border: none;
     width: 280px;
     height: auto;
-    padding: 0;
-    line-height: 25px;
+    padding: 0 0 0 4px;
+    line-height: 24px;
 }
 .flexdatalist-multiple li.value {
     display: inline-block;
-    padding: 2px 25px 2px 5px;
-    background: #efefef;
+    padding: 2px 25px 2px 7px;
+    background: #eee;
     border-radius: 3px;
+    color: #777;
+    line-height: 20px;
 }
 .flexdatalist-multiple li.toggle {
     cursor: pointer;
@@ -108,9 +110,9 @@
 
 .flexdatalist-multiple li.value span.fdl-remove {
     font-weight: 700;
-    padding: 0 5px;
+    padding: 2px 5px;
     font-size: 20px;
-    line-height: 25px;
+    line-height: 20px;
     cursor: pointer;
     position: absolute;
     top: 0;
