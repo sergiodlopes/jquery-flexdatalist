@@ -72,7 +72,8 @@ jQuery.fn.flexdatalist = function (options, value) {
                     allowDuplicateValues: false,
                     requestType: 'get',
                     limitOfValues: 0,
-                    _values: []
+                    _values: [],
+                    valuesSeparator: ','
                 },
                 $this.data(),
                 (typeof options === 'object' ? options : {})
@@ -133,7 +134,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             // Keydown
             .on('input keydown', function (event) {
                 var val = $this._keyword();
-                // Comma separated values
+                // The values is separated by valuesSeparator, default is one Comma
                 if ((_this._keyNum(event) === 188 || _this._keyNum(event) === 13)
                     && !_options.selectionRequired
                     && _options.multiple
@@ -283,7 +284,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     callback(JSON.parse(data));
                 } catch (e) {}
             } else if ($this._toCSV() || typeof _options.valueProperty === 'string') {
-                var values = data.split(',');
+                var values = data.split(_options.valuesSeparator);
                 if (typeof _options.valueProperty === 'string') {
                     var _searchIn = _options.searchIn;
                     _options.searchIn = _options.valueProperty.split(',');
@@ -909,7 +910,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     if (isJSON) {
                         value = JSON.parse(value);
                     } else if (isCSV) {
-                        value = value.split(',');
+                        value = value.split($this._options('valuesSeparator'));
                     }
                 } else if (isJSON || isCSV) {
                     value = [];
@@ -923,7 +924,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                 if (isJSON && !_this._isEmpty(value)) {
                     value = JSON.stringify(value);
                 } else if (isCSV) {
-                    value = value.join(',');
+                    value = value.join($this._options('valuesSeparator'));
                 }
             }
             if (value == $this.val()) {
@@ -1261,7 +1262,7 @@ jQuery.fn.flexdatalist = function (options, value) {
         if (value.length === 0) {
             return _default;
         }
-        return typeof value === 'string' ? value.split(',') : value;
+        return typeof value === 'string' ? value.split($this._options('valuesSeparator')) : value;
     }
 
 /**
