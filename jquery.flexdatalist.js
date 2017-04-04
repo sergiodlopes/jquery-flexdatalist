@@ -193,6 +193,13 @@ jQuery.fn.flexdatalist = function (options, value) {
                     });
                 }
 
+            // Focusin
+            }).on('focusin', function() {
+                $this.parent().find('.flexdatalist-multiple').addClass('focus');
+
+            }).on('focusout', function() {
+                $this.parent().find('.flexdatalist-multiple').removeClass('focus');
+
             // Blur
             }).on('blur', function () {
                 // Set value user leaves string in field onblur
@@ -371,7 +378,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     callback(cachedData);
                     return;
                 }
-               
+
                 var _opts = {};
                 if (_options.requestType == 'post') {
                     $.each(_options, function (option, value) {
