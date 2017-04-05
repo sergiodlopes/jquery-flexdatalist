@@ -1,0 +1,18 @@
+{
+  "name": "jQuery.Flexdatalist",
+  "description": "jQuery Datalist Autocomplete plugin",
+  "version": "1.9.4",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sergiodlopes/jquery-flexdatalist.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sergiodlopes/jquery-flexdatalist/issues"
+  },
+  "dependencies": {
+    "jquery": ">=1.8"
+  },
+  "author": "Sérgio Dinis Lopes",
+  "license": "MIT",
+  "homepage": "http://projects.sergiodinislopes.pt/flexdatalist/"
+}
