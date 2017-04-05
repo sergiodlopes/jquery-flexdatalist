@@ -72,8 +72,8 @@ jQuery.fn.flexdatalist = function (options, value) {
                     allowDuplicateValues: false,
                     requestType: 'get',
                     limitOfValues: 0,
-                    _values: [],
-                    valuesSeparator: ','
+                    valuesSeparator: ',',
+                    _values: []
                 },
                 $this.data(),
                 (typeof options === 'object' ? options : {})
@@ -134,14 +134,14 @@ jQuery.fn.flexdatalist = function (options, value) {
             // Keydown
             .on('input keydown', function (event) {
                 var val = $this._keyword();
-                // The values is separated by valuesSeparator, default is one Comma
+                // The values is separated by options.valuesSeparator
                 if ((_this._keyNum(event) === 188 || _this._keyNum(event) === 13)
                     && !_options.selectionRequired
                     && _options.multiple
                     && !$this._resultSelected()) {
-                    event.preventDefault();
-                    $this._value(val);
-                    $this._removeResults();
+                        event.preventDefault();
+                        $this._value(val);
+                        $this._removeResults();
                 // Remove results on tab away
                 } else if (_this._keyNum(event) === 9) {
                     $this._removeResults();
@@ -919,7 +919,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     if (isJSON) {
                         value = JSON.parse(value);
                     } else if (isCSV) {
-                        value = value.split($this._options('valuesSeparator'));
+                        value = value.split(_options.valuesSeparator);
                     }
                 } else if (isJSON || isCSV) {
                     value = [];
@@ -933,7 +933,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                 if (isJSON && !_this._isEmpty(value)) {
                     value = JSON.stringify(value);
                 } else if (isCSV) {
-                    value = value.join($this._options('valuesSeparator'));
+                    value = value.join(_options.valuesSeparator);
                 }
             }
             if (value == $this.val()) {
@@ -1267,11 +1267,14 @@ jQuery.fn.flexdatalist = function (options, value) {
 /**
  * To array.
  */
-    this._csvToArray = function (value, _default) {
+    this._csvToArray = function (value, _default, separator) {
         if (value.length === 0) {
             return _default;
         }
-        return typeof value === 'string' ? value.split($this._options('valuesSeparator')) : value;
+        if (!separator) {
+            separator = ',';
+        }
+        return typeof value === 'string' ? value.split(separator) : value;
     }
 
 /**
@@ -1310,10 +1313,10 @@ jQuery.fn.flexdatalist = function (options, value) {
                 _targetOpts = option;
             }
             // normalize options
-            _targetOpts.searchIn = _this._csvToArray(_targetOpts.searchIn);
+            _targetOpts.searchIn = _this._csvToArray(_targetOpts.searchIn, undefined, _targetOpts.valuesSeparator);
             _targetOpts.relatives = _targetOpts.relatives && $(_targetOpts.relatives).length > 0 ? $(_targetOpts.relatives) : null;
             _targetOpts.textProperty = _targetOpts.textProperty === null ? _targetOpts.searchIn[0] : _targetOpts.textProperty;
-            _targetOpts.visibleProperties = _this._csvToArray(_targetOpts.visibleProperties, _targetOpts.searchIn);
+            _targetOpts.visibleProperties = _this._csvToArray(_targetOpts.visibleProperties, _targetOpts.searchIn, _targetOpts.valuesSeparator);
             $target.data('flexdatalist', _targetOpts);
         }
         return _targetOpts;
