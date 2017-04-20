@@ -1121,6 +1121,8 @@ jQuery.fn.flexdatalist = function (options, value) {
         $this._chained();
         // Process default value
         $this._initValue();
+
+        $this.data('flexdatalist')._reloadShowResults = $this._showResults;
     };
 
 /**
@@ -1146,6 +1148,36 @@ jQuery.fn.flexdatalist = function (options, value) {
  */
     this._reset = function () {
         this._destroy();
+    }
+
+/**
+ * Reload datalist.
+ */
+    this._reload = function () {
+        var $_input = $(this),
+            $datalist = $('#' + _this.attr("list")),
+            datalist = $($_input[0]).data('flexdatalist'),
+            data = [];
+
+        $datalist.find('option').each(function() {
+            var $option = $(this),
+                val = $option.val(),
+                label = $option.text();
+
+            data.push({
+                label: (label.length > 0 ? label : val),
+                value: val
+            });
+        });
+
+        if (typeof $($_input[0]).data('flexdatalist') === "undefined") {
+            console.log("No has flexdatalist this element.");
+            return;
+        }
+
+
+        datalist.data = data;
+        datalist._reloadShowResults(data);
     }
 
 /**
