@@ -199,7 +199,10 @@ jQuery.fn.flexdatalist = function (options, value) {
                 $this.parent().find('.flexdatalist-multiple').addClass('focus');
 
             }).on('focusout', function() {
-                $this.parent().find('.flexdatalist-multiple').removeClass('focus');
+                var openResults = ($('.flexdatalist-results').length > 0);
+                if (!openResults) {
+                    $this.parent().find('.flexdatalist-multiple').removeClass('focus');
+                }
 
             // Blur
             }).on('blur', function () {
