@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.9.4
+ * 1.9.5
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -1102,9 +1102,9 @@ jQuery.fn.flexdatalist = function (options, value) {
      * Position results below parent element.
      */
         $this._position = function () {
-            var $target = $_this;
+            var $target = $('input:focus:eq(0)');
             if ($this._options('multiple')) {
-                $target = $ulMultiple;
+                $target = $target.parents('.flexdatalist-multiple:eq(0)');
             }
             // Set some required CSS properties
             $('ul.flexdatalist-results').css({
