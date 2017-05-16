@@ -1103,6 +1103,9 @@ jQuery.fn.flexdatalist = function (options, value) {
      */
         $this._position = function () {
             var $target = $('input:focus:eq(0)');
+            if ($target.length == 0) {
+                $target = $_this;
+            }
             if ($this._options('multiple')) {
                 $target = $target.parents('.flexdatalist-multiple:eq(0)');
             }
