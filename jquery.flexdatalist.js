@@ -579,9 +579,10 @@ jQuery.fn.flexdatalist = function (options, value) {
      * Wrap found keyword with span.highlight.
      */
         $this._highlight = function (keyword, text) {
+            var keywordEscaped = keyword.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
             if (text) {
                 return text.replace(
-                    new RegExp(keyword, ($this._options('searchContain') ? "ig" : "i")),
+                    new RegExp(keywordEscaped, ($this._options('searchContain') ? "ig" : "i")),
                     '|:|$&|::|'
                 );
             }
