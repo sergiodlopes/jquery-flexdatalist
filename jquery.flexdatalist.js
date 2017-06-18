@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.9.5
+ * 1.9.6
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -32,7 +32,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             $ulMultiple,
             _cache = {},
             _previousText = '',
-            _requestTimeout = null,
+            _searchTimeout = null,
             _inputName = $this.attr('name');
 
         if ($this.hasClass('flexdatalist-set')) {
@@ -64,6 +64,7 @@ jQuery.fn.flexdatalist = function (options, value) {
                     searchEqual: false,
                     searchByWord: false,
                     searchDisabled: false,
+                    searchDelay: 200,
                     normalizeString: null,
                     multiple: $this.is('[multiple]'),
                     maxShownResults: 100,
@@ -163,9 +164,12 @@ jQuery.fn.flexdatalist = function (options, value) {
                         }
                     }
                     if (keyword.length >= _options.minLength) {
-                        $this._search(function (matches) {
-                            $this._showResults(matches);
-                        });
+                        clearTimeout(_searchTimeout);
+                        _searchTimeout = setTimeout(function () {
+                            $this._search(function (matches) {
+                                $this._showResults(matches);
+                            });
+                        }, _options.searchDelay);
                     } else {
                         $this._removeResults();
                     }
@@ -193,14 +197,12 @@ jQuery.fn.flexdatalist = function (options, value) {
                         $this._showResults(matches);
                     });
                 }
-
             // Focusin
             }).on('focusin', function() {
                 $this.parent().find('.flexdatalist-multiple').addClass('focus');
-
+            // Focusout
             }).on('focusout', function() {
                 $this.parent().find('.flexdatalist-multiple').removeClass('focus');
-
             // Blur
             }).on('blur', function () {
                 // Set value user leaves string in field onblur
@@ -367,52 +369,49 @@ jQuery.fn.flexdatalist = function (options, value) {
                 return callback([]);
             }
 
-            clearTimeout(_requestTimeout);
-            _requestTimeout = setTimeout(function () {
-                if (_options.cache && _options.cache !== 2) {
-                    cacheKey = keyword.substring(0, (_options.minLength > 0 ? _options.minLength : 1));
-                }
+            if (_options.cache && _options.cache !== 2) {
+                cacheKey = keyword.substring(0, (_options.minLength > 0 ? _options.minLength : 1));
+            }
 
-                // Check cache
-                var cachedData = $this._cache(cacheKey);
-                if (cachedData && _options.cache) {
-                    callback(cachedData);
-                    return;
-                }
+            // Check cache
+            var cachedData = $this._cache(cacheKey);
+            if (cachedData && _options.cache) {
+                callback(cachedData);
+                return;
+            }
 
-                var _opts = {};
-                if (_options.requestType == 'post') {
-                    $.each(_options, function (option, value) {
-                        if (option.indexOf('_') == 0) {
-                            return;
-                        }
-                        _opts[option] = value;
-                    });
-                    delete _opts.relatives;
-                }
-
-                $this._remote({
-                    url: _options.url,
-                    data: $.extend(
-                        $this._relativesData(),
-                        _options.params,
-                        {
-                            keyword: keyword,
-                            contain: _options.searchContain,
-                            selected: value,
-                            options: _opts
-                        }
-                    ),
-                    success: function (data) {
-                        var _data = $this._getRemoteData(data),
-                            _keyword = $this._keyword();
-                        if (_keyword.length >= keyword.length) {
-                            callback(_data);
-                        }
-                        $this._cache(cacheKey, _data);
+            var _opts = {};
+            if (_options.requestType == 'post') {
+                $.each(_options, function (option, value) {
+                    if (option.indexOf('_') == 0) {
+                        return;
                     }
+                    _opts[option] = value;
                 });
-            }, 200);
+                delete _opts.relatives;
+            }
+
+            $this._remote({
+                url: _options.url,
+                data: $.extend(
+                    $this._relativesData(),
+                    _options.params,
+                    {
+                        keyword: keyword,
+                        contain: _options.searchContain,
+                        selected: value,
+                        options: _opts
+                    }
+                ),
+                success: function (data) {
+                    var _data = $this._getRemoteData(data),
+                        _keyword = $this._keyword();
+                    if (_keyword.length >= keyword.length) {
+                        callback(_data);
+                    }
+                    $this._cache(cacheKey, _data);
+                }
+            });
         }
 
     /**
@@ -864,7 +863,9 @@ jQuery.fn.flexdatalist = function (options, value) {
                         .append('<span class="fdl-remove">&times;</span>')
                         .insertBefore($inputContainer);
                 // Refocus input
-                $inputContainer.find('input').focus();
+                if (!init) {
+                    $inputContainer.find('input').focus();
+                }
                 $li.find('span.fdl-remove').click(function () {
                     var $container = $(this).parent(),
                         index = $container.index();
@@ -875,7 +876,9 @@ jQuery.fn.flexdatalist = function (options, value) {
                         $this._normalizeValue(currentValue);
                         $this._allowValues();
                     }
+                    $this.trigger('before:flexdatalist.remove');
                     $container.remove();
+                    $this.trigger('after:flexdatalist.remove').trigger('change');
                 });
                 // Toggle selected option
                 if (_options.toggleSelected) {
