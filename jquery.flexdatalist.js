@@ -3,7 +3,7 @@
  * Autocomplete for input fields, with support for datalists.
  *
  * Version:
- * 1.9.6
+ * 1.9.5
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -279,7 +279,6 @@ jQuery.fn.flexdatalist = function (options, value) {
                 $_this.val('');
                 $this._options('searchEqual', false);
                 if (!_this._isEmpty(values)) {
-                    $this._selected(true);
                     $this._values(values, true);
                 }
                 _previousText = $this._keyword();
