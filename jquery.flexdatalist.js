@@ -945,6 +945,7 @@ jQuery.fn.flexdatalist = function (options, value) {
             }
             if (value === '') {
                 $this._options('_values', []);
+                $this._selected(false);
             }
             $this.val(value, true);
             if (!init && $this._changed()) {
