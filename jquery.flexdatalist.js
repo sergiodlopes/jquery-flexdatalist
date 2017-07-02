@@ -1211,7 +1211,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .append(text)
                     .appendTo($container)
             },
-
         /**
          * Items iteration.
          */
@@ -1226,7 +1225,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
                 $this.trigger('shown:flexdatalist.results', [items]);
             },
-
         /**
          * Result item creation.
          */
@@ -1256,7 +1254,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
                 return $li;
             },
-
         /**
          * Results container
          */
@@ -1275,7 +1272,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             'border-width': '1px',
                             'border-bottom-left-radius': $target.css("border-bottom-left-radius"),
                             'border-bottom-right-radius': $target.css("border-bottom-right-radius")
-                        }).data('target', $alias);
+                        }).data({
+                            target: $alias,
+                            input: $this
+                        });
                     _this.position($alias);
                 }
                 return $container;
@@ -1298,18 +1298,16 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
                 return data;
             },
-
-    /**
-     * Check if highlighted property value exists,
-     * if true, return it, if not, fallback to given string
-     */
+        /**
+         * Check if highlighted property value exists,
+         * if true, return it, if not, fallback to given string
+         */
             highlight: function (item, property, fallback) {
                 if (_this.isDefined(item, property + '_highlight')) {
                     return item[property + '_highlight'];
                 }
                 return (_this.isDefined(item, property) ? item[property] : fallback);
             },
-
         /**
          * Remove results
          */
@@ -1319,6 +1317,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     selector = 'ul.flexdatalist-results li';
                 }
                 $(selector).remove();
+                $this.trigger('removed:flexdatalist.results');
             }
         }
 
@@ -1585,7 +1584,8 @@ jQuery(function ($) {
 
             // on escape key, remove results
             if (keynum === 27) {
-                return $ul.remove();
+                $ul.remove();
+                return;
             }
 
             // Enter key
