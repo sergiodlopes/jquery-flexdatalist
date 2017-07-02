@@ -94,7 +94,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         textProperty: null,
         valueProperty: null,
         visibleProperties: [],
-        thumbProperty: 'thumb',
+        iconProperty: 'thumb',
         searchIn: ['label'],
         searchContain: false,
         searchEqual: false,
@@ -109,6 +109,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         toggleSelected: false,
         allowDuplicateValues: false,
         requestType: 'get',
+        resultsProperty: 'results',
+        keywordParamName: 'keyword',
         limitOfValues: 0,
         valuesSeparator: ',',
         debug: true
@@ -870,6 +872,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             url: function (callback) {
                 var __this = this,
                     keyword = $alias.val(),
+                    keywordParam = options.keywordParamName,
                     value = _this.fvalue.get(),
                     relatives = this.relativesData();
 
@@ -906,7 +909,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         relatives,
                         options.params,
                         {
-                            keyword: keyword,
+                            keywordParamName: keyword,
                             contain: options.searchContain,
                             selected: value,
                             original: options.originalValue,
@@ -915,6 +918,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     ),
                     success: function (_data) {
                         var _keyword = $alias.val();
+                        // Is this really needed?
                         if (_keyword.length >= keyword.length) {
                             callback(_data);
                         }
@@ -951,7 +955,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Extract remote data from server response.
          */
             extractRemoteData: function (data) {
-                var _data = data.results ? data.results : data;
+                var _data = _this.isDefined(data, options.resultsProperty) ? data[options.resultsProperty] : data;
                 if (typeof _data === 'string' && _data.indexOf('[{') === 0) {
                     _data = JSON.parse(_data);
                 }
@@ -1236,8 +1240,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         continue;
                     }
                     var $item = {};
-                    if (visibleProperty === 'thumb') {
-                        // Thumbnail image
+                    if (visibleProperty === options.iconProperty) {
+                        // Icon
                         $item = $('<img>')
                             .addClass('item item-' + visibleProperty)
                             .attr('src', item[visibleProperty]);
