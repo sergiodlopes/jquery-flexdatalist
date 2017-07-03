@@ -1583,13 +1583,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             if (value.length === 0) {
                 return _default;
             }
-            return typeof value === 'string' ? value.split(options.valuesSeparator) : value;
+            return typeof value === 'string' ? value.split(_this.options.get('valuesSeparator')) : value;
         }
 
     /**
      * Plugin warnings for debug.
      */
         this.debug = function (msg, data) {
+            var options = _this.options.get();
             if (!options.debug) {
                 return;
             }
