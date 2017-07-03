@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.3
+ * 2.0.4
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -544,10 +544,19 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         return;
                     }
                     $li = this.findLi($li);
-                    $this.trigger('before:flexdatalist.toggle', [$li.data('value'), options]);
                     var index = $li.index(),
+                        data = $li.data(),
+                        action = $li.hasClass('disabled') ? 'enable' : 'disable',
                         current = _this.fvalue.get();
-                    if ($li.hasClass('disabled')) {
+                        
+                    $this.trigger('before:flexdatalist.toggle', [
+                        action,
+                        data.value,
+                        data.text,
+                        options
+                    ]);
+
+                    if (action === 'enable') {
                         var value = $li.data('value');
                         current.splice(index, 0, value);
                         $li.removeClass('disabled');
@@ -555,14 +564,20 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         current.splice(index, 1);
                         $li.addClass('disabled');
                     }
+
                     current = _this.fvalue.toStr(current);
                     _this.value = current;
 
                     $this
-                        .trigger('after:flexdatalist.toggle', [$li.data('value'), options])
+                        .trigger('after:flexdatalist.toggle', [
+                            action,
+                            data.value,
+                            data.text,
+                            options
+                        ])
                         .trigger('change:flexdatalist', [
-                            $li.data('value'),
-                            $li.data('text'),
+                            data.value,
+                            data.text,
                             options
                         ]).trigger('change');
                 },
@@ -573,21 +588,25 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     $li = this.findLi($li);
                     var values = _this.fvalue.get(),
                         index = $li.index(),
-                        options = _this.options.get();
+                        data = $li.data(),
+                        options = _this.options.get(),
+                        args = [
+                            data.value,
+                            data.text,
+                            options
+                        ];
 
-                    $this.trigger('before:flexdatalist.remove', [$li.data('value'), options]);
+                    $this.trigger('before:flexdatalist.remove', args);
+                    
                     var val = values.splice(index, 1);
                     values = _this.fvalue.toStr(values);
                     $this[0].value = values;
                     $li.remove();
 
                     $this
-                        .trigger('after:flexdatalist.remove', [$li.data('value'), options])
-                        .trigger('change:flexdatalist', [
-                            $li.data('value'),
-                            $li.data('text'),
-                            options
-                        ]).trigger('change');
+                        .trigger('after:flexdatalist.remove', args)
+                        .trigger('change:flexdatalist', args)
+                        .trigger('change');
 
                     // For allowDuplicateValues
                     _values.splice(index, 1);
