@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.0
+ * 2.0.1
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -312,7 +312,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         'value': ''
                     })
                     .addClass('flexdatalist-alias')
-                    .removeClass('flexdatalist');
+                    .removeClass('flexdatalist')
+                    .attr('autocomplete', 'off');
                 $this.addClass('flexdatalist flexdatalist-set').prop('type', 'hidden');
                 return $alias;
             },
@@ -371,7 +372,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         }
 
     /**
-     * Manipulate input value(s) (where the real magic happens).
+     * Manipulate input value(s) (where the magic happens).
      */
         this.fvalue = {
         /**
@@ -448,7 +449,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         _this.debug('Invalid JSON given');
                     }
                 }
-                if (this.isCSV() || typeof options.valueProperty === 'string') {
+                if (this.isCSV() || (!this.isJSON() && typeof options.valueProperty === 'string')) {
                     var _searchIn = options.searchIn,
                         _searchEqual = options.searchEqual;
                     options.searchIn = options.valueProperty.split(',');
@@ -872,7 +873,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             url: function (callback) {
                 var __this = this,
                     keyword = $alias.val(),
-                    keywordParam = options.keywordParamName,
+                    keywordParamName = options.keywordParamName,
                     value = _this.fvalue.get(),
                     relatives = this.relativesData();
 
@@ -902,20 +903,22 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     callback(cache);
                     return;
                 }
+                
+                var data = $.extend(
+                    relatives,
+                    options.params,
+                    {
+                        contain: options.searchContain,
+                        selected: value,
+                        original: options.originalValue,
+                        options: _opts
+                    }
+                );
+                data[keywordParamName] = keyword;
 
                 this.remote({
                     url: options.url,
-                    data: $.extend(
-                        relatives,
-                        options.params,
-                        {
-                            keywordParamName: keyword,
-                            contain: options.searchContain,
-                            selected: value,
-                            original: options.originalValue,
-                            options: _opts
-                        }
-                    ),
+                    data: data,
                     success: function (_data) {
                         var _keyword = $alias.val();
                         // Is this really needed?
