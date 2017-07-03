@@ -107,6 +107,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         toggleSelected: false,
         allowDuplicateValues: false,
         requestType: 'get',
+        requestContentType: 'default',
         resultsProperty: 'results',
         keywordParamName: 'keyword',
         limitOfValues: 0,
@@ -403,7 +404,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             $this.trigger('change:flexdatalist', [
                                 values,
                                 null,
-                                options
+                                _this.options.get()
                             ]).trigger('change');
                         }
                     });
@@ -509,7 +510,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
              */
                 add: function (val, txt) {
                     var _multiple = this,
-                        $li = this.li(val, txt);
+                        $li = this.li(val, txt),
+                        options = _this.options.get();
                     // Toggle
                     $li.click(function () {
                         _multiple.toggle($(this));
@@ -926,7 +928,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
                 this.remote({
                     url: options.url,
-                    data: data,
+                    data: options.requestContentType == 'json' ? JSON.stringify(data) : data,
                     success: function (_data) {
                         var _keyword = $alias.val();
                         // Is this really needed?
@@ -941,17 +943,22 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * AJAX request.
          */
             remote: function (settings) {
-                var __this = this;
+                var __this = this,
+                    options = _this.options.get();
                 // Prevent get data when pressing backspace button
                 if ($this.hasClass('flexdatalist-loading')) {
                     return;
                 }
                 $this.addClass('flexdatalist-loading');
+                var contentType = 'application/x-www-form-urlencoded';
+                if (options.requestContentType === 'json') {
+                    contentType = 'application/json';
+                }
                 $.ajax($.extend(
                     {
                         type: 'post',
                         dataType: 'json',
-                        contentType: 'application/json',
+                        contentType: contentType + '; charset=UTF-8',
                         complete: function () {
                             $this.removeClass('flexdatalist-loading');
                         }
