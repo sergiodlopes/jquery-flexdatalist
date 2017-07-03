@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.2
+ * 2.0.3
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -298,7 +298,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .clone(false)
                     .attr({
                         'list': null,
-                        'name': ($this.attr('name') ? $this.attr('name') + '-flexdatalist' : null),
+                        'name': ($this.attr('name') ? 'flexdatalist-' + $this.attr('name') : null),
                         'id': ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : null),
                         'value': ''
                     })
