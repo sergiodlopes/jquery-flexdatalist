@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.1
+ * 2.0.2 WIP
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -146,13 +146,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             this.fvalue.set($this.attr('value'));
 
             $alias
-            // Focus
-            .on('focus', function (event) {
+            // Focusin
+            .on('focusin', function (event) {
                 _this.action.redoSearchFocus(event);
                 _this.action.showAllResults(event);
-            })
-            // Focusin
-            .on('focusin', function() {
                 if ($multiple) {
                     $multiple.addClass('focus');
                 }
@@ -172,7 +169,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 _this.action.backSpaceKeyRemove(event);
             })
             // Focusout
-            .on('focusout', function() {
+            .on('focusout', function () {
                 if ($multiple) {
                     $multiple.removeClass('focus');
                 }
@@ -191,7 +188,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Add value on comma or enter keypress.
          */
             keypressValue: function (event) {
-                if ((_this.keyNum(event) === 188 || _this.keyNum(event) === 13)
+                var key = _this.keyNum(event),
+                    val = $alias[0].value;
+                if (val.length > 0 && (key === 188 || key === 13)
                     && !options.selectionRequired
                     && options.multiple) {
                         var val = $alias[0].value;
