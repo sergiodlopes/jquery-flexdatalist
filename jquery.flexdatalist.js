@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.4
+ * 2.0.5
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -146,11 +146,11 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if (_this.keyNum(event) === 9) {
                     _this.results.remove();
                 }
-                _this.action.keypressValue(event);
                 _this.action.backSpaceKeyRemove(event);
             })
             // Keyup
             .on('input keyup', function (event) {
+                _this.action.keypressValue(event);
                 _this.action.keypressSearch(event);
                 _this.action.copyValue(event);
                 _this.action.backSpaceKeyRemove(event);
@@ -164,8 +164,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
             window.onresize = function (event) {
                 _this.position();
-            };
-            
+            };            
         }
 
     /**
@@ -219,8 +218,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             redoSearchFocus: function (event) {
                 var val = _this.fvalue.get(),
+                    options = _this.options.get(),
                     alias = $alias.val();
-                if (alias.length > 0) {
+                if ((alias.length > 0 && options.multiple) || (alias.length > 0 && val.length === 0)) {
                     this.keypressSearch(event);
                 }
             },
@@ -443,7 +443,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         _this.debug('Invalid JSON given');
                     }
                 }
-                if (this.isCSV() || (!this.isJSON() && typeof options.valueProperty === 'string')) {
+                if (this.isCSV() && typeof options.valueProperty === 'string') {
                     var _searchIn = options.searchIn,
                         _searchEqual = options.searchEqual;
                     options.searchIn = options.valueProperty.split(',');
@@ -511,7 +511,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 add: function (val, txt) {
                     var _multiple = this,
                         $li = this.li(val, txt),
-                        options = _this.options.get();
+                        options = _this.options.get(),
+                        args = [val, txt, options];
+
                     // Toggle
                     $li.click(function () {
                         _multiple.toggle($(this));
@@ -519,11 +521,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     }).find('.fdl-remove').click(function () {
                         _multiple.remove($(this).parent());
                     });
-                    $this.trigger('before:flexdatalist.add', [val, txt, options]);
+
+                    $this.trigger('before:flexdatalist.add', args);
                     this.push(val);
                     $alias.val('', true);
                     this.checkLimit();
-                    $this.trigger('after:flexdatalist.add', [val, txt, options]);
+                    $this.trigger('after:flexdatalist.add', args);
                 },
             /**
              * Push value to input.
@@ -547,7 +550,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     var index = $li.index(),
                         data = $li.data(),
                         action = $li.hasClass('disabled') ? 'enable' : 'disable',
-                        current = _this.fvalue.get();
+                        current = _this.fvalue.get(),
+                        args = [action, data.value, data.text, options];
                         
                     $this.trigger('before:flexdatalist.toggle', [
                         action,
@@ -569,17 +573,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     _this.value = current;
 
                     $this
-                        .trigger('after:flexdatalist.toggle', [
-                            action,
-                            data.value,
-                            data.text,
-                            options
-                        ])
-                        .trigger('change:flexdatalist', [
-                            data.value,
-                            data.text,
-                            options
-                        ]).trigger('change');
+                        .trigger('after:flexdatalist.toggle', args)
+                        .trigger('change:flexdatalist', args)
+                        .trigger('change');
                 },
             /**
              * Remove value from input.
@@ -590,11 +586,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         index = $li.index(),
                         data = $li.data(),
                         options = _this.options.get(),
-                        args = [
-                            data.value,
-                            data.text,
-                            options
-                        ];
+                        args = [data.value, data.text, options];
 
                     $this.trigger('before:flexdatalist.remove', args);
                     
@@ -1069,7 +1061,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     }
                     $this.trigger('after:flexdatalist.search', [keywords, data, matches]);
                     callback(matches);
-                    _this.cache.write(keywords, matches, 30);
+                    _this.cache.write(keywords, matches, 10);
                 });
             },
         /**
@@ -1240,7 +1232,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
             },
         /**
-         * Results container
+         * Remove results container.
          */
             empty: function (text) {
                 if (_this.isEmpty(text)) {
@@ -1639,7 +1631,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
 jQuery(function ($) {
     var $document = $(document);
-    // Handle selection list keyboard shortcuts and events.
+    // Handle results selection list keyboard shortcuts and events.
     if (!$document.data('flexdatalist')) {
         // Remove results on outside click
         $(document).mouseup(function (event) {
@@ -1656,11 +1648,11 @@ jQuery(function ($) {
                 index = $active.index(),
                 length = $li.length,
                 keynum = event.which || event.keyCode;
-
+            
             if (length === 0) {
                 return;
             }
-
+            
             // on escape key, remove results
             if (keynum === 27) {
                 $ul.remove();
