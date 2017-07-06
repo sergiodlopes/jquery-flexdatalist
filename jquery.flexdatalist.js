@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.6
+ * 2.0.7 WIP
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -948,7 +948,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
                 this.remote({
                     url: options.url,
-                    data: options.requestContentType == 'json' ? JSON.stringify(data) : data,
+                    data: data,
                     success: function (_data) {
                         var _keyword = $alias.val();
                         // Is this really needed?
@@ -973,10 +973,11 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var contentType = 'application/x-www-form-urlencoded';
                 if (options.requestContentType === 'json') {
                     contentType = 'application/json';
+                    settings.data = JSON.stringify(data);
                 }
                 $.ajax($.extend(
                     {
-                        type: 'post',
+                        type: options.requestType,
                         dataType: 'json',
                         contentType: contentType + '; charset=UTF-8',
                         complete: function () {
