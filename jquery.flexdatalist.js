@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.5
+ * 2.0.6
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -146,11 +146,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if (_this.keyNum(event) === 9) {
                     _this.results.remove();
                 }
+                _this.action.keypressValue(event, 188);
                 _this.action.backSpaceKeyRemove(event);
             })
             // Keyup
             .on('input keyup', function (event) {
-                _this.action.keypressValue(event);
+                _this.action.keypressValue(event, 13);
                 _this.action.keypressSearch(event);
                 _this.action.copyValue(event);
                 _this.action.backSpaceKeyRemove(event);
@@ -174,11 +175,11 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         /**
          * Add value on comma or enter keypress.
          */
-            keypressValue: function (event) {
+            keypressValue: function (event, keyCode) {
                 var key = _this.keyNum(event),
                     val = $alias[0].value,
                     options = _this.options.get();
-                if (val.length > 0 && (key === 188 || key === 13)
+                if (val.length > 0 && key === keyCode
                     && !options.selectionRequired
                     && options.multiple) {
                         var val = $alias[0].value;
@@ -373,7 +374,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             get: function (asString) {
                 var val = $this[0].value,
                     options = _this.options.get();
-                if (options.multiple && !asString) {
+                if ((options.multiple || this.isJSON()) && !asString) {
                     return this.toObj(val);
                 }
                 return this.toStr(val);
@@ -412,26 +413,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 return $this;
             },
         /**
-         * Add value.
-         */
-            add: function (val) {
-                this.set(val, true);
-            },
-        /**
-         * Toggle value.
-         */
-            toggle: function (val) {
-                this.multiple.toggle(val);
-                return $this;
-            },
-        /**
-         * Remove value.
-         */
-            remove: function (val) {
-                this.multiple.remove(val);
-                return $this;
-            },
-        /**
          * Normalize value.
          */
             _normalize: function (data, callback) {
@@ -443,26 +424,26 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         _this.debug('Invalid JSON given');
                     }
                 }
-                if (this.isCSV() && typeof options.valueProperty === 'string') {
+                if (!options.selectionRequired && typeof options.valueProperty !== 'string') {
+                    callback(data);
+                } else {
                     var _searchIn = options.searchIn,
                         _searchEqual = options.searchEqual;
-                    options.searchIn = options.valueProperty.split(',');
+                    if (typeof options.valueProperty === 'string') {
+                        options.searchIn = options.valueProperty.split(',');
+                    }
                     options.searchEqual = true;
                     _this.search.get(data, function (matches) {
-                        if (matches && matches.length > 0) {
-                            callback(matches);
-                        }
+                        callback(matches);
                         options.searchIn = _searchIn;
                         options.searchEqual = _searchEqual;
                     });
-                } else {
-                    callback(data);
                 }
             },
         /**
          * Add value.
          */
-            extract: function (val, parse) {
+            extract: function (val, ignoreEvent) {
                 var txt = this.text(val),
                     value = this.value(val),
                     current = $this[0].value,
@@ -484,7 +465,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 } else {
                     this.single(value, txt);
                 }
-                if (!parse) {
+                if (!ignoreEvent) {
                     $this.trigger('change:flexdatalist', [
                         value,
                         txt,
@@ -674,6 +655,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     options = _this.options.get();
                 if (_this.isObject(item)) {
                     if (this.isJSON()) {
+                        delete item.name_highlight;
                         value = this.toStr(item);
                     } else if (_this.isDefined(item, options.valueProperty)) {
                         value = item[options.valueProperty];
@@ -760,15 +742,21 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             toObj: function (val) {
                 if (typeof val !== 'object') {
-                    if (_this.isEmpty(val) || !_this.isDefined(val)) {
-                        val = [];
-                    } else if (this.isCSV()) {
-                        val = val.toString().split(_this.options.get('valuesSeparator'));
-                        val = $.map(val, function (v) {
-                            return $.trim(v);
-                        });
+                    if (this.isCSV()) {
+                        if (_this.isEmpty(val) || !_this.isDefined(val)) {
+                            val = [];
+                        } else {
+                            val = val.toString().split(_this.options.get('valuesSeparator'));
+                            val = $.map(val, function (v) {
+                                return $.trim(v);
+                            });
+                        }
                     } else if (this.isJSON()) {
-                        val = JSON.parse(val);
+                        if (_this.isEmpty(val) || !_this.isDefined(val)) {
+                            val = options.multiple ? [] : {};
+                        } else {
+                            val = JSON.parse(val);
+                        }
                     }
                 }
                 return val;
@@ -800,6 +788,26 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             isCSV: function () {
                 return (!this.isJSON() && _this.options.get('multiple'));
+            },
+        /**
+         * Add value.
+         */
+            add: function (val) {
+                this.set(val, true);
+            },
+        /**
+         * Toggle value.
+         */
+            toggle: function (val) {
+                this.multiple.toggle(val);
+                return $this;
+            },
+        /**
+         * Remove value.
+         */
+            remove: function (val) {
+                this.multiple.remove(val);
+                return $this;
             }
         }
 
