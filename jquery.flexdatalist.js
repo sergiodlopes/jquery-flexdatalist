@@ -742,11 +742,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             toObj: function (val) {
                 if (typeof val !== 'object') {
+                    var options = _this.options.get();
                     if (this.isCSV()) {
                         if (_this.isEmpty(val) || !_this.isDefined(val)) {
                             val = [];
                         } else {
-                            val = val.toString().split(_this.options.get('valuesSeparator'));
+                            val = val.toString().split(options.valuesSeparator);
                             val = $.map(val, function (v) {
                                 return $.trim(v);
                             });
