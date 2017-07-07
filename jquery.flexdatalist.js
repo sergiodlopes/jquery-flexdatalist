@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.7
+ * 2.0.8 WIP
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -196,8 +196,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     keyword = $alias.val(),
                     length = keyword.length,
                     options = _this.options.get();
-
+                
                 clearTimeout(_searchTimeout);
+                
+                // Ignore TAB and Shift
+                // Prevent closing results on focus when navigating with tabs
+                if (options.minLength === 0 && length === 0 && (key === 9 || key === 16)) {
+                    return;
+                }
                 if ((length === 0 && options.minLength > 0) || length < options.minLength) {
                     _this.results.remove();
                 // Ignore Enter and Directional keys
