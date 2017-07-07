@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.7 RC
+ * 2.0.7
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -421,12 +421,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             _normalize: function (data, callback) {
                 var options = _this.options.get();
                 data = this.toObj(data);
-                if (typeof options.valueProperty === 'string' && (this.isCSV() || this.isMixed())) {
+                if (typeof options.valueProperty === 'string' && !this.isJSON(data)) {
                     var _searchIn = options.searchIn,
                         _searchEqual = options.searchEqual;
-                    if (typeof options.valueProperty === 'string') {
-                        options.searchIn = options.valueProperty.split(',');
-                    }
+                    options.searchIn = options.valueProperty.split(',');
                     options.searchEqual = true;
                     _this.search.get(data, function (matches) {
                         callback(matches);
@@ -747,9 +745,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         val = $.map(val, function (v) {
                             return $.trim(v);
                         });
-                    } else if (this.isJSON()) {
-                        val = JSON.parse(val);
-                    } else if (this.isMixed() && (val.indexOf('{') === 0 || val.indexOf('[{') === 0)) {
+                    } else if (this.isJSON() || (this.isMixed() && this.isJSON(val))) {
                         val = JSON.parse(val);
                     }
                 }
@@ -771,9 +767,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 return $.trim(val);
             },
         /**
-         * Is value expected to be JSON (either object or string).
+         * If argument is passed, will check if is a valid JSON object/string.
+         * otherwise will check if JSON is the value expected for input
          */
-            isJSON: function () {
+            isJSON: function (str) {
+                if (typeof str !== 'undefined') {
+                    str = _this.isObject(str) ? JSON.stringify(str) : str;
+                    return (str.indexOf('{') === 0 || str.indexOf('[{') === 0);
+                }
                 var options = _this.options.get(),
                     prop = options.valueProperty;                
                 return (options.selectionRequired && (_this.isObject(prop) || prop === '*'));
@@ -1384,7 +1385,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             write: function (key, value, lifetime, global) {
                 if (_this.cache.isSupported()) {
-                    key = this.keyGen(key, global);
+                    key = this.keyGen(key, undefined, global);
                     var object = {
                         value: value,
                         // Get current UNIX timestamp
@@ -1402,7 +1403,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         */
             read: function (key, global) {
                 if (_this.cache.isSupported()) {
-                    key = this.keyGen(key, global);
+                    key = this.keyGen(key, undefined, global);
                     var data = localStorage.getItem(key);
                     if (data) {
                         var object = JSON.parse(data);
@@ -1426,7 +1427,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             delete: function (key, global) {
                 if (_this.cache.isSupported()) {
-                    key = this.keyGen(key, global);
+                    key = this.keyGen(key, undefined, global);
                     localStorage.removeItem(key);
                 }
             },
