@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.0.7 WIP
+ * 2.0.7 RC
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -234,7 +234,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         options = _this.options.get();
                     if (!options.multiple) {
                         if (!options.selectionRequired) {
-                            _this.fvalue.set(keyword);
+                            _this.fvalue.extract(keyword);
+                            if (keyword.length === 0) {
+                                _values = [];
+                            }
                         } else {
                             _this.fvalue.clear();
                         }
@@ -372,7 +375,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Get value(s).
          */
             get: function (asString) {
-                var val = $this[0].value,
+                var val = _this.value,
                     options = _this.options.get();
                 if ((options.multiple || this.isJSON()) && !asString) {
                     return this.toObj(val);
@@ -417,16 +420,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             _normalize: function (data, callback) {
                 var options = _this.options.get();
-                if (this.isJSON() || this.isCSV()) {
-                    try {
-                        data = this.toObj(data);
-                    } catch (e) {
-                        _this.debug('Invalid JSON given');
-                    }
-                }
-                if (!options.selectionRequired && typeof options.valueProperty !== 'string') {
-                    callback(data);
-                } else {
+                data = this.toObj(data);
+                if (typeof options.valueProperty === 'string' && (this.isCSV() || this.isMixed())) {
                     var _searchIn = options.searchIn,
                         _searchEqual = options.searchEqual;
                     if (typeof options.valueProperty === 'string') {
@@ -438,7 +433,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         options.searchIn = _searchIn;
                         options.searchEqual = _searchEqual;
                     });
+                    return;
                 }
+                callback(data);
             },
         /**
          * Add value.
@@ -654,7 +651,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var value = item,
                     options = _this.options.get();
                 if (_this.isObject(item)) {
-                    if (this.isJSON()) {
+                    if (this.isJSON() || this.isMixed()) {
                         delete item.name_highlight;
                         value = this.toStr(item);
                     } else if (_this.isDefined(item, options.valueProperty)) {
@@ -741,23 +738,19 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Value to object
          */
             toObj: function (val) {
-                if (typeof val !== 'object') {
+                if (typeof val === 'string') {
                     var options = _this.options.get();
-                    if (this.isCSV()) {
-                        if (_this.isEmpty(val) || !_this.isDefined(val)) {
-                            val = [];
-                        } else {
-                            val = val.toString().split(options.valuesSeparator);
-                            val = $.map(val, function (v) {
-                                return $.trim(v);
-                            });
-                        }
+                    if (_this.isEmpty(val) || !_this.isDefined(val)) {
+                        val = options.multiple ? [] : (this.isJSON() ? {} : '');
+                    } else if (this.isCSV()) {
+                        val = val.toString().split(options.valuesSeparator);
+                        val = $.map(val, function (v) {
+                            return $.trim(v);
+                        });
                     } else if (this.isJSON()) {
-                        if (_this.isEmpty(val) || !_this.isDefined(val)) {
-                            val = options.multiple ? [] : {};
-                        } else {
-                            val = JSON.parse(val);
-                        }
+                        val = JSON.parse(val);
+                    } else if (this.isMixed() && (val.indexOf('{') === 0 || val.indexOf('[{') === 0)) {
+                        val = JSON.parse(val);
                     }
                 }
                 return val;
@@ -771,7 +764,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         val = '';
                     } else if (this.isCSV()) {
                         val = val.join(_this.options.get('valuesSeparator'));
-                    } else if (this.isJSON()) {
+                    } else if (this.isJSON() || this.isMixed()) {
                         val = JSON.stringify(val);
                     }
                 }
@@ -781,8 +774,16 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Is value expected to be JSON (either object or string).
          */
             isJSON: function () {
-                var prop = _this.options.get('valueProperty');
-                return _this.isObject(prop) || prop === '*';
+                var options = _this.options.get(),
+                    prop = options.valueProperty;                
+                return (options.selectionRequired && (_this.isObject(prop) || prop === '*'));
+            },
+        /**
+         * Is value expected to be JSON (either object or string).
+         */
+            isMixed: function () {
+                var options = _this.options.get();                
+                return !options.selectionRequired && options.valueProperty === '*';
             },
         /**
          * Is value expected to be CSV?
@@ -857,7 +858,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 // Remote source
                 if (typeof options.data === 'string') {
                     var url = options.data,
-                        cache = _this.cache.read(url);
+                        cache = _this.cache.read(url, true);
                     if (cache) {
                         callback(cache);
                         return;
@@ -867,7 +868,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         success: function (data) {
                             options.data = data;
                             callback(data);
-                            _this.cache.write(url, data, options.cacheLifetime);
+                            _this.cache.write(url, data, options.cacheLifetime, true);
                         }
                     });
                 } else {
@@ -1053,6 +1054,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     if (!_this.isDefined(keywords)) {
                         keywords = $alias.val();
                     }
+                    
                     var cache = _this.cache.read(keywords);
                     if (cache) {
                         callback(cache);
@@ -1369,7 +1371,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         }
 
     /**
-    * Simple interface for localStorage.
+    * Interface for localStorage.
     */
         this.cache = {
         /**
@@ -1380,9 +1382,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * @param int lifetime In Seconds
          * @return mixed
          */
-            write: function (key, value, lifetime) {
+            write: function (key, value, lifetime, global) {
                 if (_this.cache.isSupported()) {
-                    key = this.keyGen(key);
+                    key = this.keyGen(key, global);
                     var object = {
                         value: value,
                         // Get current UNIX timestamp
@@ -1398,9 +1400,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         * @param string key Data key string
         * @return mixed
         */
-            read: function (key) {
+            read: function (key, global) {
                 if (_this.cache.isSupported()) {
-                    key = this.keyGen(key);
+                    key = this.keyGen(key, global);
                     var data = localStorage.getItem(key);
                     if (data) {
                         var object = JSON.parse(data);
@@ -1422,9 +1424,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          *
          * @param string key Data key string
          */
-            delete: function (key) {
+            delete: function (key, global) {
                 if (_this.cache.isSupported()) {
-                    key = this.keyGen(key);
+                    key = this.keyGen(key, global);
                     localStorage.removeItem(key);
                 }
             },
@@ -1434,7 +1436,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             clear: function () {
                 if (_this.cache.isSupported()) {
                     for (var key in localStorage){
-                        if (key.indexOf(fid) > -1) {
+                        if (key.indexOf(fid) > -1 || key.indexOf('global') > -1) {
                             _this.cache.delete(key);
                         }
                     }
@@ -1461,7 +1463,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         *
         * @return string Cache key
         */
-            keyGen: function (str, seed) {
+            keyGen: function (str, seed, global) {
                 if (typeof str === 'object') {
                     str = JSON.stringify(str);
                 }
@@ -1472,7 +1474,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     hval ^= str.charCodeAt(i);
                     hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
                 }
-                return fid + ("0000000" + (hval >>> 0).toString(16)).substr(-8);
+                return (global ? 'global' : fid) + ("0000000" + (hval >>> 0).toString(16)).substr(-8);
             }
         }
 
@@ -1513,6 +1515,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 options.relatives = options.relatives && $(options.relatives).length > 0 ? $(options.relatives) : null;
                 options.textProperty = options.textProperty === null ? options.searchIn[0] : options.textProperty;
                 options.visibleProperties = _this.csvToArray(options.visibleProperties, options.searchIn);
+                if (options.valueProperty === '*' && options.multiple && !options.selectionRequired) {
+                    throw new Error('Selection must be required for multiple, JSON fields!');
+                }
                 return options;
             }
         }
@@ -1521,12 +1526,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
      * Position results below parent element.
      */
         this.position = function () {
-            var $target = $('input:focus:eq(0)');
-            if ($target.length === 0) {
-                $target = $alias;
-            }
-            if (_this.options.get('multiple')) {
-                $target = $target.parents('.flexdatalist-multiple:eq(0)');
+            var $target = $alias;
+            if ($multiple) {
+                $target = $multiple;
             }
             // Set some required CSS properties
             $('ul.flexdatalist-results').css({
