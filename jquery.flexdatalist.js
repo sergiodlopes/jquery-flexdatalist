@@ -932,6 +932,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
                 // Cache
                 var cacheKey = _this.cache.keyGen({
+                        url: options.url,
                         relative: relatives,
                         keyword: keyword.substring(0, (options.minLength > 0 ? options.minLength : 1)),
                         contain: options.searchContain
