@@ -16,9 +16,9 @@
 }
 .flexdatalist-results li {
     border-bottom: 1px solid #ccc;
-    padding: 0 15px;
+    padding: 8px 15px;
     font-size: 14px;
-    line-height: 35px;
+    line-height: 20px;
 }
 .flexdatalist-results li span.highlight {
     font-weight: 700;
@@ -40,7 +40,7 @@
 .flexdatalist-results li.group {
     background: #F3F3F4;
     color: #666;
-    padding: 0 8px;
+    padding: 8px 8px;
 }
 .flexdatalist-results li .group-name {
     font-weight: 700;
