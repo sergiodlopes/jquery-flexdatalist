@@ -1,7 +1,7 @@
 {
   "name": "jQuery.Flexdatalist",
   "description": "jQuery Datalist Autocomplete plugin",
-  "version": "2.0.7",
+  "version": "2.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/sergiodlopes/jquery-flexdatalist.git"
