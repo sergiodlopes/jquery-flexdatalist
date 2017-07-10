@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.0
+ * 2.1.1 WIP
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -113,6 +113,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         noResultsText: 'No results found for "{keyword}"',
         toggleSelected: false,
         allowDuplicateValues: false,
+        redoSearchOnFocus: true,
         requestType: 'get',
         requestContentType: 'x-www-form-urlencoded',
         resultsProperty: 'results',
@@ -238,7 +239,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var val = _this.fvalue.get(),
                     options = _this.options.get(),
                     alias = $alias.val();
-                if ((alias.length > 0 && options.multiple) || (alias.length > 0 && val.length === 0)) {
+                if (options.redoSearchOnFocus && ((alias.length > 0 && options.multiple) || (alias.length > 0 && val.length === 0))) {
                     this.keypressSearch(event);
                 }
             },
