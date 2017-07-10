@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.1 WIP
+ * 2.1.0.2
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -1072,30 +1072,30 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             get: function (keywords, data, callback) {
                 var __this = this,
                     options = _this.options.get();
-                if (options.searchDisabled) {
-                    _this.debug('Search is disabled!');
-                    return;
-                }
-                
-                var matches = _this.cache.read(keywords);
-                if (!matches) {
-                    $this.trigger('before:flexdatalist.search', [keywords, data]);
-                    if (!_this.isEmpty(keywords)) {
-                        matches = [];
-                        var words = __this.split(keywords);
-                        for (var index = 0; index < data.length; index++) {
-                            var item = data[index];
-                            if (_this.isDup(item)) {
-                                continue;
-                            }
-                            item = __this.matches(item, words);
-                            if (item) {
-                                matches.push(item);
+
+                if (!options.searchDisabled) {
+                    var matches = _this.cache.read(keywords);
+                    if (!matches) {
+                        $this.trigger('before:flexdatalist.search', [keywords, data]);
+                        if (!_this.isEmpty(keywords)) {
+                            matches = [];
+                            var words = __this.split(keywords);
+                            for (var index = 0; index < data.length; index++) {
+                                var item = data[index];
+                                if (_this.isDup(item)) {
+                                    continue;
+                                }
+                                item = __this.matches(item, words);
+                                if (item) {
+                                    matches.push(item);
+                                }
                             }
                         }
+                        _this.cache.write(keywords, matches, 2);
+                        $this.trigger('after:flexdatalist.search', [keywords, data, matches]);
                     }
-                    _this.cache.write(keywords, matches, 2);
-                    $this.trigger('after:flexdatalist.search', [keywords, data, matches]);
+                } else {
+                    matches = data;
                 }
                 callback(matches);
             },
