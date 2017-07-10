@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.0.3
+ * 2.1.1
  *
  * Depends:
  * jquery.js > 1.8.3
