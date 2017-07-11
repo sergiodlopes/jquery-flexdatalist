@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.1.1
+ * 2.1.1.2
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -19,17 +19,21 @@
 jQuery.fn.flexdatalist = function (_option, _value) {
     'use strict';
 
-    var destroy = function ($flex) {
+    var destroy = function ($flex, clear) {
         $flex.each(function () {
             var $this = $(this),
-                data = $this.data('flexdatalist');
-            $this.removeClass('flexdatalist-set')
-                .attr('type', 'text')
-                .val((data && data.originalValue ? data.originalValue : ''))
-                .removeData('flexdatalist')
-                .next('.flexdatalist-alias')
-                .remove();
-            $this.next('ul.flexdatalist-multiple').remove();
+                data = $this.data(),
+                options = data.flexdatalist,
+                $aliascontainer = data.aliascontainer;
+
+            if ($aliascontainer) {
+                $this.removeClass('flexdatalist-set')
+                    .attr('type', 'text')
+                    .val((options && options.originalValue && !clear ? options.originalValue : ''))
+                    .removeData('flexdatalist')
+                    .removeData('aliascontainer');
+                $aliascontainer.remove();
+            }
         });
     }
 
@@ -37,9 +41,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
     if (typeof _option === 'string' && _option !== 'reset') {
         if (typeof this[0].fvalue !== 'undefined') {
             var target = this[0];
-            // Set/get value
             if (_option === 'destroy') {
-                destroy($(this));
+                destroy(this, _value);
             // Get/Set value
             } else if (_option === 'value') {
                 if (typeof _value === 'undefined') {
@@ -84,7 +87,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
     // Destroy if already set
     if (this.length > 0 && typeof this[0].fvalue !== 'undefined') {
-        destroy($(this));
+        destroy(this);
     }
 
     var _options = $.extend({
@@ -316,21 +319,23 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if ($alias.attr('autofocus')) {
                     $alias.focus();
                 }
+                $this.data('aliascontainer', ($multiple ? $multiple : $alias));
                 this.chained();
             },
         /**
          * Single value input.
          */
             alias: function () {
+                var id = ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : fid);
                 var $alias = $this
                     .clone(false)
                     .attr({
                         'list': null,
                         'name': ($this.attr('name') ? 'flexdatalist-' + $this.attr('name') : null),
-                        'id': ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : null),
+                        'id': id,
                         'value': ''
                     })
-                    .addClass('flexdatalist-alias')
+                    .addClass('flexdatalist-alias ' + id)
                     .removeClass('flexdatalist')
                     .attr('autocomplete', 'off');
                 $this.addClass('flexdatalist flexdatalist-set').prop('type', 'hidden');
@@ -341,7 +346,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             multipleInput: function ($alias) {
                 $multiple = $('<ul tabindex="1">')
-                    .addClass('flexdatalist-multiple')
+                    .addClass('flexdatalist-multiple ' + id)
                     .css({
                         'border-color': $this.css('border-left-color'),
                         'border-width': $this.css('border-left-width'),
@@ -356,7 +361,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .addClass('flexdatalist-multiple-value')
                     .append($alias)
                     .appendTo($multiple);
-
                 return $multiple;
             },
         /**
