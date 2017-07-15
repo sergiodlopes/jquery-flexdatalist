@@ -145,7 +145,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         this.init = function () {
             var options = this.options.init();
             this.set.up();
-            
+
             $alias
             // Focusin
             .on('focusin', function (event) {
@@ -169,6 +169,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 _this.action.keypressSearch(event);
                 _this.action.copyValue(event);
                 _this.action.backSpaceKeyRemove(event);
+                _this.action.showAllResults(event);
             })
             // Focusout
             .on('focusout', function () {
@@ -181,7 +182,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 _this.position();
             };
 
-            this.fvalue.clear(false, true)._load(options.originalValue, function () {
+            this.fvalue._load(options.originalValue, function (values, matches) {
+                if (options.selectionRequired) {
+                    _this.fvalue.clear(true, true);
+                }
                 _this.fdisabled(options.disabled);
                 $this.trigger('init:flexdatalist', [options]);
             }, true);
@@ -235,8 +239,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                                     _this.results.show(matches);
                                 });
                             });
-                        } else {
-                            _this.results.remove();
                         }
                     }, options.searchDelay);
                 }
@@ -262,10 +264,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     if (!options.multiple) {
                         if (!options.selectionRequired) {
                             _this.fvalue.extract(keyword);
-                            if (keyword.length === 0) {
-                                _values = [];
-                            }
-                        } else {
+                        }
+                        if (keyword.length === 0) {
                             _this.fvalue.clear();
                         }
                     }
@@ -372,7 +372,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     var toggle = function (init) {
                         options.relatives.each(function () {
                             var emptyRelative = _this.isEmpty($(this).val()),
-                                empty = _this.isEmpty($this[0].value);
+                                empty = _this.isEmpty(_this.value);
                             // If disabling, clear all values
                             if (emptyRelative || !empty) {
                                 _this.fvalue.clear();
@@ -486,18 +486,18 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     _this.data.load(function (data) {
                         // Search data
                         _this.search.get(values, data, function (matches) {
+                            callback(values, matches);
                             if (!_this.isEmpty(matches)) {
                                 _this.fvalue.extract(matches, init);
                             }
-                            callback(values);
                             options.searchIn = _searchIn;
                             options.searchEqual = _searchEqual;
                         });
                     }, values);
                     return;
                 }
-                _this.fvalue.extract(values, init);
                 callback(values);
+                _this.fvalue.extract(values, init);
             },
         /**
          * Extract value and text.
@@ -524,14 +524,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         .trigger('change:flexdatalist', [result, options])
                         .trigger('change');
                 }
-            },            
+            },
         /**
          * @inherited.
          */
             _extract: function (val) {
                 var txt = this.text(val),
                     value = this.value(val),
-                    current = $this[0].value,
+                    current = _this.value,
                     options = _this.options.get();
 
                 if (options.multiple) {
@@ -553,9 +553,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             single: function (val, txt) {
                 if (txt && txt !== $alias.val()) {
-                    $alias.val(txt, true);
+                    $alias[0].value = txt;
                 }
-                $this[0].value = val;
+                _this.value = val;
             },
         /**
          * Input with multiple values.
@@ -578,7 +578,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     });
 
                     this.push(val);
-                    $alias.val('', true);
+                    $alias[0].value = '';
                     this.checkLimit();
                 },
             /**
@@ -589,7 +589,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     val = _this.fvalue.toObj(val);
                     current.push(val);
                     val = _this.fvalue.toStr(current);
-                    $this[0].value = val;
+                    _this.value = val;
                 },
             /**
              * Toggle value.
@@ -606,9 +606,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             action = $li.hasClass('disabled') ? 'enable' : 'disable',
                             current = _this.fvalue.get(),
                             args = [{value: data.value, text: data.text, action: action}, options];
-    
+
                         $this.trigger('before:flexdatalist.toggle', args);
-    
+
                         if (action === 'enable') {
                             var value = $li.data('value');
                             current.splice(index, 0, value);
@@ -617,10 +617,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             current.splice(index, 1);
                             $li.addClass('disabled');
                         }
-    
+
                         current = _this.fvalue.toStr(current);
                         _this.value = current;
-    
+
                         $this
                             .trigger('after:flexdatalist.toggle', args)
                             .trigger('change:flexdatalist', args)
@@ -638,10 +638,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             data = $li.data(),
                             options = _this.options.get(),
                             arg = {value: data.value, text: data.text};
-    
+
                         values.splice(index, 1);
                         values = _this.fvalue.toStr(values);
-                        $this[0].value = values;
+                        _this.value = values;
                         $li.remove();
                         _this.fvalue.multiple.checkLimit();
 
@@ -658,7 +658,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         options = _this.options.get();
                     $this.trigger('before:flexdatalist.remove.all', [values, options]);
                     $multiple.find('li:not(.input-container)').remove();
-                    $this[0].value = '';
+                    _this.value = '';
                     _values = [];
                     $this.trigger('after:flexdatalist.remove.all', [values, options]);
                 },
@@ -784,13 +784,13 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Clear input value(s).
          */
             clear: function (alias, init) {
-                var current = $this[0].value,
+                var current = _this.value,
                     options = _this.options.get();
 
                 if (options.multiple) {
                     this.multiple.removeAll();
                 }
-                $this[0].value = '';
+                _this.value = '';
                 if (current !== '' && !init) {
                     $this.trigger('change:flexdatalist', [{value: '', text: ''}, options]).trigger('change');
                 }
@@ -1271,9 +1271,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         __this.remove();
                         $this.trigger('select:flexdatalist', [item, options]);
                     }
+                }).on('active:flexdatalist.results', function (event, item) {
+                    if (item && !options.multiple) {
+                        _this.fvalue.extract(item);
+                        $this.trigger('select:flexdatalist', [item, options]);
+                    }
                 }).hover(function () {
                     $li.removeClass('active');
-                    $(this).addClass('active');
+                    $(this).addClass('active').trigger('active:flexdatalist.results', [$(this).data('item')]);
                 }, function () {
                     $(this).removeClass('active');
                 });
@@ -1353,15 +1358,16 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var $container = $('ul.flexdatalist-results');
                 if ($container.length === 0) {
                     $container = $('<ul>')
-                        .addClass('flexdatalist-results')
+                        .addClass('flexdatalist-results ')
                         .appendTo('body')
+                        .attr('id', $alias.attr('id') + '-results')
                         .css({
                             'border-color': $target.css("border-left-color"),
                             'border-width': '1px',
                             'border-bottom-left-radius': $target.css("border-bottom-left-radius"),
                             'border-bottom-right-radius': $target.css("border-bottom-right-radius")
                         }).data({
-                            target: $alias,
+                            target: ($multiple ? $multiple : $alias),
                             input: $this
                         });
                     _this.position($alias);
@@ -1528,7 +1534,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     {
                         multiple: (_options.multiple === null ? $this.is('[multiple]') : _options.multiple),
                         disabled: (_options.disabled === null ? $this.is('[disabled]') : _options.disabled),
-                        originalValue: $this[0].value
+                        originalValue: _this.value
                     }
                 );
                 this.set(options);
@@ -1567,16 +1573,16 @@ jQuery.fn.flexdatalist = function (_option, _value) {
      * Position results below parent element.
      */
         this.position = function () {
-            var $target = $alias;
-            if ($multiple) {
-                $target = $multiple;
+            var $results = $('ul.flexdatalist-results'),
+                $target = $results.data('target');
+            if ($results.length > 0) {
+                // Set some required CSS properties
+                $results.css({
+                    'width': $target.outerWidth() + 'px',
+                    'top': (($target.offset().top + $target.outerHeight())) + 'px',
+                    'left': $target.offset().left + 'px'
+                });
             }
-            // Set some required CSS properties
-            $('ul.flexdatalist-results').css({
-                'width': $target.outerWidth() + 'px',
-                'top': (($target.offset().top + $target.outerHeight())) + 'px',
-                'left': $target.offset().left + 'px'
-            });
         }
 
     /**
@@ -1748,7 +1754,7 @@ jQuery(function ($) {
                 return;
             }
 
-            // Enter key
+            // Enter/tab key
             if (keynum === 13) {
                 event.preventDefault();
                 $active.click();
@@ -1770,6 +1776,8 @@ jQuery(function ($) {
                         $active = $li.removeClass('active').filter('.item:last').addClass('active');
                     }
                 }
+
+                $active.trigger('active:flexdatalist.results', [$active.data('item')]);
 
                 // Scroll to
                 var position = ($active.prev().length === 0 ? $active : $active.prev()).position().top;
