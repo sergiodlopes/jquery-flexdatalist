@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.2
+ * 2.1.2.1
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -1269,11 +1269,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     if (item) {
                         _this.fvalue.extract(item);
                         __this.remove();
-                        $this.trigger('select:flexdatalist', [item, options]);
-                    }
-                }).on('active:flexdatalist.results', function (event, item) {
-                    if (item && !options.multiple) {
-                        _this.fvalue.extract(item);
                         $this.trigger('select:flexdatalist', [item, options]);
                     }
                 }).hover(function () {
