@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.2.1
+ * 2.1.2.2
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -170,12 +170,16 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 _this.action.copyValue(event);
                 _this.action.backSpaceKeyRemove(event);
                 _this.action.showAllResults(event);
+                _this.action.clearValue(event);
+                _this.action.removeResults(event);
             })
             // Focusout
-            .on('focusout', function () {
+            .on('focusout', function (event) {
                 if ($multiple) {
                     $multiple.removeClass('focus');
                 }
+                _this.action.clearText(event);
+                _this.action.clearValue(event);
             });
 
             window.onresize = function (event) {
@@ -202,7 +206,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var key = _this.keyNum(event),
                     val = $alias[0].value,
                     options = _this.options.get();
-                if (val.length > 0 && key === keyCode
+                if (val.length > 0
+                    && key === keyCode
                     && !options.selectionRequired
                     && options.multiple) {
                         var val = $alias[0].value;
@@ -221,17 +226,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     options = _this.options.get();
 
                 clearTimeout(_searchTimeout);
-
-                // Ignore TAB and Shift
-                // Prevent closing results when navigating (in and out of focus) with tabs
-                if (options.minLength === 0 && length === 0 && (key === 9 || key === 16)) {
-                    return;
-                }
-                if ((length === 0 && options.minLength > 0) || length < options.minLength) {
-                    _this.results.remove();
-                // Ignore Enter and Directional keys
-                } else if (!key || (key !== 13 && (key < 37 || key > 40))) {
-                    _this.results.remove();
+                if (!key || (key !== 13 && (key < 37 || key > 40))) {
                     _searchTimeout = setTimeout(function () {
                         if ((options.minLength === 0 && length > 0) || (options.minLength > 0 && length >= options.minLength)) {
                             _this.data.load(function (data) {
@@ -261,13 +256,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if (_this.keyNum(event) !== 13) {
                     var keyword = $alias.val(),
                         options = _this.options.get();
-                    if (!options.multiple) {
-                        if (!options.selectionRequired) {
-                            _this.fvalue.extract(keyword);
-                        }
-                        if (keyword.length === 0) {
-                            _this.fvalue.clear();
-                        }
+                    if (!options.multiple && !options.selectionRequired) {
+                        _this.fvalue.extract(keyword);
                     }
                 }
             },
@@ -297,6 +287,40 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     _this.data.load(function (data) {
                         _this.results.show(data);
                     });
+                }
+            },
+        /**
+         * Clear text/alias input when criteria is met.
+         */
+            clearText: function (event) {
+                var val = _this.fvalue.get(),
+                    options = _this.options.get();
+
+                if (!options.multiple && options.selectionRequired && val.length === 0) {
+                    $alias[0].value = '';
+                }
+            },
+        /**
+         * Clear value when criteria is met.
+         */
+            clearValue: function (event) {
+                var val = _this.fvalue.get(),
+                    keyword = $alias.val(),
+                    options = _this.options.get();
+                
+                if (!options.multiple && keyword.length <= options.minLength) {
+                    _this.fvalue.clear();
+                }
+            },
+        /**
+         * Remove results when criteria is met.
+         */
+            removeResults: function (event) {
+                var val = _this.fvalue.get(),
+                    keyword = $alias.val(),
+                    options = _this.options.get();
+                if (options.minLength > 0 && keyword.length < options.minLength) {
+                    _this.results.remove();
                 }
             }
         }
