@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.3.1
+ * 2.1.3.2
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -1619,7 +1619,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         $input = $multiple.find('li.input-container');
                     if (disabled) {
                         $multiple.addClass('disabled');
-                        $input.hide();
+                        if ($btns.length > 0) {
+                            $input.hide();
+                        }
                         $btns.hide();
                     } else {
                         $multiple.removeClass('disabled');
