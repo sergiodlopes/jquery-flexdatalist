@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.3
+ * 2.1.3.1
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -186,10 +186,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 _this.position();
             };
 
+            if (options.selectionRequired) {
+                _this.fvalue.clear(true, true);
+            }
             this.fvalue._load(options.originalValue, function (values, matches) {
-                if (options.selectionRequired) {
-                    _this.fvalue.clear(true, true);
-                }
                 _this.fdisabled(options.disabled);
                 $this.trigger('init:flexdatalist', [options]);
             }, true);
@@ -510,12 +510,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     _this.data.load(function (data) {
                         // Search data
                         _this.search.get(values, data, function (matches) {
-                            callback(values, matches);
                             if (!_this.isEmpty(matches)) {
                                 _this.fvalue.extract(matches, init);
                             }
                             options.searchIn = _searchIn;
                             options.searchEqual = _searchEqual;
+                            callback(values, matches);
                         });
                     }, values);
                     return;
@@ -839,6 +839,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         });
                     } else if (this.isJSON() || (this.isMixed() && this.isJSON(val))) {
                         val = JSON.parse(val);
+                    } else if (typeof val === 'number') {
+                        val = val.toString();
                     }
                 }
                 return val;
