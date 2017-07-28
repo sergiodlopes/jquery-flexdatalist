@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.3.2
+ * 2.1.3.3
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -185,6 +185,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             window.onresize = function (event) {
                 _this.position();
             };
+            
+            // Run garbage collector
+            this.cache.gc();
 
             if (options.selectionRequired) {
                 _this.fvalue.clear(true, true);
@@ -1472,15 +1475,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     var data = localStorage.getItem(key);
                     if (data) {
                         var object = JSON.parse(data);
-                        if (object.lifetime) {
-                            var diff = (_this.unixtime() - object.timestamp);
-                            if (object.lifetime > diff) {
-                                return object.value;
-                            }
-                            _this.cache.delete(key);
-                            return null;
+                        if (!this.expired(object)) {
+                            return object.value;
                         }
-                        return object.value;
+                        localStorage.removeItem(key);
                     }
                 }
                 return null;
@@ -1503,10 +1501,27 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if (_this.cache.isSupported()) {
                     for (var key in localStorage){
                         if (key.indexOf(fid) > -1 || key.indexOf('global') > -1) {
-                            _this.cache.delete(key);
+                            localStorage.removeItem(key);
                         }
                     }
                     localStorage.clear();
+                }
+            },
+       /**
+        * Run cache garbage collector to prevent using all localStorage's
+        * available space.
+        */
+            gc: function () {
+                if (_this.cache.isSupported()) {
+                    for (var key in localStorage){
+                        if (key.indexOf(fid) > -1 || key.indexOf('global') > -1) {
+                            var data = localStorage.getItem(key);
+                            data = JSON.parse(data);
+                            if (this.expired(data)) {
+                                localStorage.removeItem(key);
+                            }
+                        }
+                    }
                 }
             },
        /**
@@ -1521,6 +1536,19 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     } catch (e) {
                         return false;
                     }
+                }
+                return false;
+            },
+       /**
+        * Check if cache data as expired.
+        *
+        * @param object object Data to check
+        * @return boolean True if expired, false otherwise
+        */
+            expired: function (object) {
+                if (object.lifetime) {
+                    var diff = (_this.unixtime() - object.timestamp);
+                    return object.lifetime <= diff;
                 }
                 return false;
             },
