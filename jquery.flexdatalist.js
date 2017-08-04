@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.3.3
+ * 2.1.3.4
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -494,6 +494,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             _load: function (values, callback, init) {
                 var options = _this.options.get(),
+                    valueProp = options.valueProperty,
                     _values = this.toStr(values),
                     _val = this.get(true);
 
@@ -504,22 +505,35 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     return;
                 }
                 values = this.toObj(values);
-                if (!_this.isEmpty(values) && typeof options.valueProperty === 'string' && !this.isJSON(values)) {
-                    var _searchIn = options.searchIn,
-                        _searchEqual = options.searchEqual;
-                    options.searchIn = options.valueProperty.split(',');
-                    options.searchEqual = true;
+                if (!_this.isEmpty(values) && !_this.isEmpty(valueProp) && valueProp !== '*') {
+                    if (!_this.isObject(valueProp)) {
+                        valueProp = valueProp.split(',');
+                    }
                     // Load data
                     _this.data.load(function (data) {
-                        // Search data
-                        _this.search.get(values, data, function (matches) {
-                            if (!_this.isEmpty(matches)) {
-                                _this.fvalue.extract(matches, init);
+                        if (!_this.isObject(values)) {
+                            values = values.split(',');
+                        } else if (!$.isArray(values)) {
+                            values = [values];
+                        }
+                        var found = [];
+                        for (var idxv = 0; idxv < values.length; idxv++) {
+                            var value = values[idxv];
+                            for (var i = 0; i < data.length; i++) {
+                                var item = data[i];
+                                for (var idx = 0; idx < valueProp.length; idx++) {
+                                    var prop = valueProp[idx],
+                                    value = _this.isDefined(value, prop) ? value[prop] : value;
+                                    if (_this.isDefined(item, prop) && value === item[prop]) {
+                                        found.push(item);
+                                    }
+                                }
                             }
-                            options.searchIn = _searchIn;
-                            options.searchEqual = _searchEqual;
-                            callback(values, matches);
-                        });
+                        }
+                        if (found.length > 0) {
+                            _this.fvalue.extract(found, true);
+                        }
+                        callback(values);
                     }, values);
                     return;
                 }
@@ -746,13 +760,24 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             value: function (item) {
                 var value = item,
-                    options = _this.options.get();
+                    options = _this.options.get(),
+                    valueProperty = options.valueProperty;
                 if (_this.isObject(item)) {
                     if (this.isJSON() || this.isMixed()) {
                         delete item.name_highlight;
-                        value = this.toStr(item);
-                    } else if (_this.isDefined(item, options.valueProperty)) {
-                        value = item[options.valueProperty];
+                        if ($.isArray(valueProperty)) {
+                            var _value = {};
+                            for (var i = 0; i < valueProperty.length; i++) {
+                                if (_this.isDefined(item, valueProperty[i])) {
+                                    _value[valueProperty[i]] = item[valueProperty[i]];
+                                }
+                            }
+                            value = this.toStr(_value);
+                        } else {
+                            value = this.toStr(item);
+                        }
+                    } else if (_this.isDefined(item, valueProperty)) {
+                        value = item[valueProperty];
                     } else if (_this.isDefined(item, options.searchIn[0])) {
                         value = item[options.searchIn[0]];
                     } else {
@@ -840,7 +865,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         val = $.map(val, function (v) {
                             return $.trim(v);
                         });
-                    } else if (this.isJSON() || (this.isMixed() && this.isJSON(val))) {
+                    } else if ((this.isMixed() || this.isJSON()) && this.isJSON(val)) {
                         val = JSON.parse(val);
                     } else if (typeof val === 'number') {
                         val = val.toString();
@@ -880,7 +905,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
                 var options = _this.options.get(),
                     prop = options.valueProperty;
-                return (options.selectionRequired && (_this.isObject(prop) || prop === '*'));
+                return (_this.isObject(prop) || prop === '*');
             },
         /**
          * Is value expected to be JSON (either object or string).
@@ -1348,25 +1373,35 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var $li = $('<li>').data('item', item).addClass('item'),
                     options = _this.options.get(),
                     visibleProperties = options.visibleProperties;
-
+                    
                 for (var index = 0; index < visibleProperties.length; index++) {
                     var visibleProperty = visibleProperties[index];
-                    if (options.groupBy && options.groupBy === visibleProperty || !_this.isDefined(item, visibleProperty)) {
-                        continue;
-                    }
-                    var $item = {};
-                    if (visibleProperty === options.iconProperty) {
-                        // Icon
-                        $item = $('<img>')
-                            .addClass('item item-' + visibleProperty)
-                            .attr('src', item[visibleProperty]);
-                    } else {
-                        var propertyText = _this.results.highlight(item, visibleProperty);
-                        // Other text properties
+                    
+                    if (visibleProperty.indexOf('{') > -1) {
+                        var str = _this.fvalue.placeholders.replace(item, visibleProperty),
+                            parsed = _this.fvalue.placeholders.parse(visibleProperty);
                         $item = $('<span>')
-                            .addClass('item item-' + visibleProperty)
-                            .html(propertyText + ' ');
+                            .addClass('item item-' + Object.values(parsed).join('-'))
+                            .html(str + ' ').appendTo($li);
+                    } else {
+                        if (options.groupBy && options.groupBy === visibleProperty || !_this.isDefined(item, visibleProperty)) {
+                            continue;
+                        }
+                        var $item = {};
+                        if (visibleProperty === options.iconProperty) {
+                            // Icon
+                            $item = $('<img>')
+                                .addClass('item item-' + visibleProperty)
+                                .attr('src', item[visibleProperty]);
+                        } else {
+                            var propertyText = _this.results.highlight(item, visibleProperty);
+                            // Other text properties
+                            $item = $('<span>')
+                                .addClass('item item-' + visibleProperty)
+                                .html(propertyText + ' ');
+                        }
                     }
+                    
                     $item.appendTo($li);
                 }
                 return $li;
