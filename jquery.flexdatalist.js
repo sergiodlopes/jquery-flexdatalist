@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.3.4
+ * 2.1.3.5
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -649,7 +649,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             args = [{value: data.value, text: data.text, action: action}, options];
 
                         $this.trigger('before:flexdatalist.toggle', args);
-
+                        
                         if (action === 'enable') {
                             var value = $li.data('value');
                             current.splice(index, 0, value);
@@ -714,7 +714,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         .append('<span class="fdl-remove">&times;</span>')
                         .data({
                             'text': txt,
-                            'value': val
+                            'value': _this.fvalue.toObj(val)
                         })
                         .insertBefore($inputContainer);
                 },
