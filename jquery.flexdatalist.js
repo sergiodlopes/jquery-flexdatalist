@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.1.3.5
+ * 2.2.0
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -265,18 +265,25 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
             },
         /**
-         * Check if keypress is valid.
+         * Remove value on backspace key (multiple input only).
          */
             backSpaceKeyRemove: function (event) {
                 var options = _this.options.get();
-                if (options.removeOnBackspace) {
+                if (options.removeOnBackspace && options.multiple) {
                     var val = $alias.val(),
                         $remove = $alias.data('_remove');
-                    if ($remove) {
-                        _this.fvalue.remove($remove);
-                        $alias.data('_remove', null);
-                    } else if (val.length === 0 && options.multiple && _this.keyNum(event) === 8) {
-                        $alias.data('_remove', $alias.parents('li:eq(0)').prev());
+                    if (_this.keyNum(event) === 8) {
+                        if (val.length === 0) {
+                            if ($remove) {
+                                _this.fvalue.remove($remove);
+                                $alias.data('_remove', null);
+                            } else {
+                                console.log('remove!');
+                                $alias.data('_remove', $alias.parents('li:eq(0)').prev());
+                            }
+                        } else {
+                            $alias.data('_remove', null);
+                        }
                     }
                 }
             },
@@ -348,6 +355,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
                 $this.data('aliascontainer', ($multiple ? $multiple : $alias));
                 this.chained();
+                $this.css({
+                    'position': 'absolute',
+                    'top': -14000,
+                    'left': -14000
+                });
+                $alias.attr('style', null);
             },
         /**
          * Single value input.
@@ -365,7 +378,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .addClass('flexdatalist-alias ' + id)
                     .removeClass('flexdatalist')
                     .attr('autocomplete', 'off');
-                $this.addClass('flexdatalist flexdatalist-set').prop('type', 'hidden');
+                $this.addClass('flexdatalist flexdatalist-set')
                 return $alias;
             },
         /**
