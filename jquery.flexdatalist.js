@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.2.0
+ * 2.2.0.1
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -28,7 +28,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
             if ($aliascontainer) {
                 $this.removeClass('flexdatalist-set')
-                    .attr('type', 'text')
+                    .attr('style', null)
                     .val((options && options.originalValue && !clear ? options.originalValue : ''))
                     .removeData('flexdatalist')
                     .removeData('aliascontainer');
@@ -353,32 +353,28 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if ($alias.attr('autofocus')) {
                     $alias.focus();
                 }
-                $this.data('aliascontainer', ($multiple ? $multiple : $alias));
-                this.chained();
-                $this.css({
+                $this.data('aliascontainer', ($multiple ? $multiple : $alias)).addClass('flexdatalist flexdatalist-set').css({
                     'position': 'absolute',
                     'top': -14000,
                     'left': -14000
                 });
-                $alias.attr('style', null);
+                this.chained();
             },
         /**
          * Single value input.
          */
             alias: function () {
-                var id = ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : fid);
-                var $alias = $this
-                    .clone(false)
+                var aliasid = ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : fid);
+                var $alias = $('<input type="text">')
                     .attr({
-                        'list': null,
+                        'class': $this.attr('class'),
                         'name': ($this.attr('name') ? 'flexdatalist-' + $this.attr('name') : null),
-                        'id': id,
+                        'id': aliasid,
                         'value': ''
                     })
-                    .addClass('flexdatalist-alias ' + id)
+                    .addClass('flexdatalist-alias ' + aliasid)
                     .removeClass('flexdatalist')
                     .attr('autocomplete', 'off');
-                $this.addClass('flexdatalist flexdatalist-set')
                 return $alias;
             },
         /**
@@ -386,7 +382,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             multipleInput: function ($alias) {
                 $multiple = $('<ul tabindex="1">')
-                    .addClass('flexdatalist-multiple ' + id)
+                    .addClass('flexdatalist-multiple ' + fid)
                     .css({
                         'border-color': $this.css('border-left-color'),
                         'border-width': $this.css('border-left-width'),
