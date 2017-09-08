@@ -1,3 +1,13 @@
+/**
+ * jQuery Flexdatalist basic stylesheet.
+ *
+ * Version:
+ * 2.2.1
+ *
+ * Github:
+ * https://github.com/sergiodlopes/jquery-flexdatalist/
+ *
+ */
 .flexdatalist-results {
     position: absolute;
     top: 0;
@@ -86,7 +96,7 @@
 .flexdatalist-multiple li.input-container,
 .flexdatalist-multiple li.input-container input {
     border: none;
-    width: 280px;
+    width: 40px;
     height: auto;
     padding: 0 0 0 4px;
     line-height: 24px;

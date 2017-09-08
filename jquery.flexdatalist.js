@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.2.0.1
+ * 2.2.1
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -172,6 +172,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 _this.action.showAllResults(event);
                 _this.action.clearValue(event);
                 _this.action.removeResults(event);
+                _this.action.inputWidth(event);
             })
             // Focusout
             .on('focusout', function (event) {
@@ -297,6 +298,23 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     _this.data.load(function (data) {
                         _this.results.show(data);
                     });
+                }
+            },
+        /**
+         * Calculate input width by number of characters.
+         */
+            inputWidth: function (event) {
+                var options = _this.options.get();
+                if (options.multiple) {
+                    var keyword = $alias.val(),                    
+                        fontSize = parseInt($alias.css('fontSize').replace('px', '')),
+                        minWidth = 40,
+                        maxWidth = $this.innerWidth(),
+                        width = ((keyword.length + 1) * fontSize);
+
+                    if (width >= minWidth && width <= maxWidth) {
+                        $alias[0].style.width = width + 'px';
+                    }
                 }
             },
         /**
@@ -624,7 +642,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         _multiple.toggle($(this));
                     // Remove
                     }).find('.fdl-remove').click(function () {
-                        _multiple.remove($(this).parent());
+                        _this.fvalue.remove($(this).parent());
                     });
 
                     this.push(val);
