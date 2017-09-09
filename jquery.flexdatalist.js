@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.2.1
+ * 2.2.2
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -31,7 +31,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .attr('style', null)
                     .val((options && options.originalValue && !clear ? options.originalValue : ''))
                     .removeData('flexdatalist')
-                    .removeData('aliascontainer');
+                    .removeData('aliascontainer')
+                    .off();
                 $aliascontainer.remove();
             }
         });
@@ -259,8 +260,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
             copyValue: function (event) {
                 if (_this.keyNum(event) !== 13) {
                     var keyword = $alias.val(),
+                        val = _this.fvalue.get(true),
                         options = _this.options.get();
-                    if (!options.multiple && !options.selectionRequired) {
+                    if (!options.multiple && !options.selectionRequired && keyword.length !== val.length) {
                         _this.fvalue.extract(keyword);
                     }
                 }
@@ -388,7 +390,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         'class': $this.attr('class'),
                         'name': ($this.attr('name') ? 'flexdatalist-' + $this.attr('name') : null),
                         'id': aliasid,
-                        'value': ''
+                        'placeholder': $this.attr('placeholder')
                     })
                     .addClass('flexdatalist-alias ' + aliasid)
                     .removeClass('flexdatalist')
