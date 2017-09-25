@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.2.2
+ * 2.2.2.1
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -28,7 +28,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
             if ($aliascontainer) {
                 $this.removeClass('flexdatalist-set')
-                    .attr('style', null)
+                    .attr({'style': null, 'tabindex': null})
                     .val((options && options.originalValue && !clear ? options.originalValue : ''))
                     .removeData('flexdatalist')
                     .removeData('aliascontainer')
@@ -338,7 +338,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     keyword = $alias.val(),
                     options = _this.options.get();
                 
-                if (!options.multiple && keyword.length <= options.minLength) {
+                if (!options.multiple && options.selectionRequired && keyword.length <= options.minLength) {
                     _this.fvalue.clear();
                 }
             },
@@ -370,14 +370,21 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     $alias.insertAfter($this);
                 }
                 // Respect autofocus attribute
-                if ($alias.attr('autofocus')) {
+                if ($this.attr('autofocus')) {
                     $alias.focus();
                 }
+                
                 $this.data('aliascontainer', ($multiple ? $multiple : $alias)).addClass('flexdatalist flexdatalist-set').css({
                     'position': 'absolute',
                     'top': -14000,
                     'left': -14000
-                });
+                }).attr('tabindex', -1);
+
+                // update input label with alias id
+                var inputId = $this.attr('id'),
+                    aliasId = $alias.attr('id');
+                $('label[for="' + inputId + '"]').attr('for', aliasId);
+
                 this.chained();
             },
         /**
@@ -417,6 +424,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .addClass('flexdatalist-multiple-value')
                     .append($alias)
                     .appendTo($multiple);
+                    
                 return $multiple;
             },
         /**
@@ -1498,6 +1506,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if (itemsOnly) {
                     selector = 'ul.flexdatalist-results li';
                 }
+                $this.trigger('remove:flexdatalist.results');
                 $(selector).remove();
                 $this.trigger('removed:flexdatalist.results');
             }

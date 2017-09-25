@@ -96,11 +96,11 @@
 .flexdatalist-multiple li.input-container,
 .flexdatalist-multiple li.input-container input {
     border: none;
-    width: 40px;
     height: auto;
     padding: 0 0 0 4px;
     line-height: 24px;
 }
+
 .flexdatalist-multiple li.value {
     display: inline-block;
     padding: 2px 25px 2px 7px;
