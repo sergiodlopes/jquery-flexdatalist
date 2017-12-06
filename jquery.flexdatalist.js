@@ -395,6 +395,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var $alias = $('<input type="text">')
                     .attr({
                         'class': $this.attr('class'),
+                        'placeholder': $this.attr('placeholder'),
                         'name': ($this.attr('name') ? 'flexdatalist-' + $this.attr('name') : null),
                         'id': aliasid,
                         'placeholder': $this.attr('placeholder')
