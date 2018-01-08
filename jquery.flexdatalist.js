@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.2.2.1
+ * 2.2.2.2
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -1912,7 +1912,7 @@ jQuery(function ($) {
         }).data('flexdatalist', true);
     }
 
-    jQuery('input.flexdatalist:not(.flexdatalist-set)').flexdatalist();
+    jQuery('input.flexdatalist:not(.flexdatalist-set):not(.autodiscover-disabled)').flexdatalist();
 });
 
 (function ($) {
