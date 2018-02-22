@@ -1111,7 +1111,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
                 $this.addClass('flexdatalist-loading');
                 if (options.requestContentType === 'json') {
-                    settings.data = JSON.stringify(data);
+                    settings.data = JSON.stringify(settings.data);
                 }
                 $.ajax($.extend(
                     {
