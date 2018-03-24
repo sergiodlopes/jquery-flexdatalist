@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.2.3
+ * 2.2.4
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -135,7 +135,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         var $this = $(this),
             _this = this,
             _searchTimeout = null,
-            _values = [],
+            _selectedValues = [], 
             fid = 'flex' + id,
             $alias = null,
             $multiple = null;
@@ -536,12 +536,15 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     _val = this.get(true);
 
                 callback = (callback ? callback : $.noop);
+
                 // If nothing changes, return
                 if (_values.length == 0 && _val.length == 0) {
                     callback(values);
                     return;
                 }
+
                 values = this.toObj(values);
+
                 if (!_this.isEmpty(values) && !_this.isEmpty(valueProp) && valueProp !== '*') {
                     if (!_this.isObject(valueProp)) {
                         valueProp = valueProp.split(',');
@@ -614,11 +617,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
 
                 if (options.multiple) {
                     // For allowDuplicateValues
-                    if (!_this.isEmpty(txt)) {
-                        if (_this.isDup(txt)) {
+                    if (!_this.isEmpty(value)) {
+                        if (_this.isDup(value)) {
                             return;
                         }
-                        _values.push(txt);
+
+                        _selectedValues.push(value);
                         this.multiple.add(value, txt);
                     }
                 } else {
@@ -724,7 +728,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         _this.fvalue.multiple.checkLimit();
 
                         // For allowDuplicateValues
-                        _values.splice(index, 1);
+                        _selectedValues.splice(index, 1);
+
                         return arg;
                     }
                 },
@@ -737,7 +742,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     $this.trigger('before:flexdatalist.remove.all', [values, options]);
                     $multiple.find('li:not(.input-container)').remove();
                     _this.value = '';
-                    _values = [];
+                    _selectedValues = [];
                     $this.trigger('after:flexdatalist.remove.all', [values, options]);
                 },
             /**
@@ -762,7 +767,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     var limit = _this.options.get('limitOfValues');
                     if (limit > 0) {
                         var $input = $multiple.find('li.input-container'),
-                            count = _values.length;
+                            count = _selectedValues.length;
                         (limit == count ? $input.hide() : $input.show());
                     }
                 },
@@ -799,6 +804,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var value = item,
                     options = _this.options.get(),
                     valueProperty = options.valueProperty;
+
                 if (_this.isObject(item)) {
                     if (this.isJSON() || this.isMixed()) {
                         delete item.name_highlight;
@@ -820,6 +826,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     } else {
                         value = null;
                     }
+
                 }
                 return value;
             },
@@ -886,7 +893,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if (alias) {
                     $alias[0].value = '';
                 }
-                _values = [];
+                _selectedValues = [];
                 return this;
             },
         /**
@@ -1740,7 +1747,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
      */
         this.isDup = function (val) {
             if (!this.options.get('allowDuplicateValues')) {
-                return _values.length > 0 && _values.indexOf(this.fvalue.text(val)) > -1;
+                return _selectedValues.length > 0 && _selectedValues.indexOf(this.fvalue.value(val)) > -1;
             }
             return false;
         }
