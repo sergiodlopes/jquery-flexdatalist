@@ -1424,8 +1424,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     if (visibleProperty.indexOf('{') > -1) {
                         var str = _this.fvalue.placeholders.replace(item, visibleProperty),
                             parsed = _this.fvalue.placeholders.parse(visibleProperty);
+                        parsed = Object.keys(parsed).map(function(e) { return parsed[e]; });
                         $item = $('<span>')
-                            .addClass('item item-' + Object.values(parsed).join('-'))
+                            .addClass('item item-' + parsed.join('-'))
                             .html(str + ' ').appendTo($li);
                     } else {
                         if (options.groupBy && options.groupBy === visibleProperty || !_this.isDefined(item, visibleProperty)) {
