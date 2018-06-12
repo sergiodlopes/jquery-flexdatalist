@@ -725,11 +725,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         values = _this.fvalue.toStr(values);
                         _this.value = values;
                         $li.remove();
-                        _this.fvalue.multiple.checkLimit();
 
                         // For allowDuplicateValues
                         _selectedValues.splice(index, 1);
-
+                        _this.fvalue.multiple.checkLimit();
                         return arg;
                     }
                 },
