@@ -1254,6 +1254,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             highlight: function (keyword, text) {
                 if (text) {
+                    keyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     return text.replace(
                         new RegExp(keyword, (_this.options.get('searchContain') ? "ig" : "i")),
                         '|:|$&|::|'
