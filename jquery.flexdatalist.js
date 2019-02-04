@@ -135,7 +135,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         var $this = $(this),
             _this = this,
             _searchTimeout = null,
-            _selectedValues = [], 
+            _selectedValues = [],
             fid = 'flex' + id,
             $alias = null,
             $multiple = null;
@@ -1395,6 +1395,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .addClass('item no-results')
                     .append(text)
                     .appendTo($container)
+                    $this.trigger('no-results');
             },
         /**
          * Items iteration.
