@@ -38,6 +38,27 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         });
     }
 
+    /**
+     * A function to take a string written in dot notation style, and use it to
+     * find a nested object property inside of an object.
+     *
+     * Useful in a plugin or module that accepts a JSON array of objects, but
+     * you want to let the user specify where to find various bits of data
+     * inside of each custom object instead of forcing a standardized
+     * property list.
+     *
+     * @param String nested A dot notation style parameter reference (ie "urls.small")
+     * @param Object object (optional) The object to search
+     *
+     * @return the value of the property in question
+     */
+
+    var getDescendantProp = function (obj, desc) {
+        var arr = desc.split('.');
+        while (arr.length && (obj = obj[arr.shift()]));
+        return obj;
+    }
+
     // Callable stuff
     if (typeof _option === 'string' && _option !== 'reset') {
         if (typeof this[0].fvalue !== 'undefined') {
@@ -797,6 +818,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     return this.get().length > 0;
                 }
             },
+
         /**
          * Get value that will be set on input field.
          */
@@ -804,7 +826,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var value = item,
                     options = _this.options.get(),
                     valueProperty = options.valueProperty;
-
                 if (_this.isObject(item)) {
                     if (this.isJSON() || this.isMixed()) {
                         delete item.name_highlight;
@@ -819,10 +840,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         } else {
                             value = this.toStr(item);
                         }
-                    } else if (_this.isDefined(item, valueProperty)) {
-                        value = item[valueProperty];
-                    } else if (_this.isDefined(item, options.searchIn[0])) {
-                        value = item[options.searchIn[0]];
+                    } else if (getDescendantProp(item, valueProperty) !== undefined) {
+                        value = getDescendantProp(item, valueProperty);
+                    } else if (getDescendantProp(item, options.searchIn[0]) !== undefined) {
+                        value = getDescendantProp(item, options.searchIn[0]);   
                     } else {
                         value = null;
                     }
@@ -837,10 +858,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var text = item,
                     options = _this.options.get();
                 if (_this.isObject(item)) {
-                    text = item[options.searchIn[0]];
-                    if (_this.isDefined(item, options.textProperty)) {
-                        text = item[options.textProperty];
-                    } else {
+                    text = getDescendantProp(item, options.searchIn[0]);
+                    if (text === undefined) {
                         text = this.placeholders.replace(item, options.textProperty, text);
                     }
                 }
@@ -1222,15 +1241,15 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     found = [],
                     options = _this.options.get(),
                     searchIn = options.searchIn;
-
                 if (keywords.length > 0) {
                     for (var index = 0; index < searchIn.length; index++) {
                         var searchProperty = searchIn[index];
-                        if (!_this.isDefined(item, searchProperty) || !item[searchProperty]) {
+                        var text = getDescendantProp(item, searchProperty);
+
+                        if (text === undefined){
                             continue;
                         }
-                        var text = item[searchProperty].toString(),
-                            highlight = text,
+                        var highlight = text,
                             strings = this.split(text);
                         for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                             var keyword = keywords[kwindex];
@@ -1428,9 +1447,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             .addClass('item item-' + Object.values(parsed).join('-'))
                             .html(str + ' ').appendTo($li);
                     } else {
-                        if (options.groupBy && options.groupBy === visibleProperty || !_this.isDefined(item, visibleProperty)) {
+                        if (options.groupBy && options.groupBy === visibleProperty || getDescendantProp(item, visibleProperty) === undefined) {
                             continue;
                         }
+
                         var $item = {};
                         if (visibleProperty === options.iconProperty) {
                             // Icon
@@ -1503,7 +1523,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 if (_this.isDefined(item, property + '_highlight')) {
                     return item[property + '_highlight'];
                 }
-                return (_this.isDefined(item, property) ? item[property] : fallback);
+                return (getDescendantProp(item, property) !== undefined ? getDescendantProp(item, property) : fallback);
             },
         /**
          * Remove results
