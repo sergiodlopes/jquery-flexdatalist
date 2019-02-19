@@ -564,7 +564,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                                 for (var idx = 0; idx < valueProp.length; idx++) {
                                     var prop = valueProp[idx],
                                     value = _this.isDefined(value, prop) ? value[prop] : value;
-                                    if (_this.isDefined(item, prop) && value === item[prop]) {
+                                    if (_this.isDefined(item, prop) && (value === item[prop] || parseInt(value) === item[prop])) {
                                         found.push(item);
                                     }
                                 }
