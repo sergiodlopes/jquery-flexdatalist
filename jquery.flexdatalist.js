@@ -128,14 +128,15 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         keywordParamName: 'keyword',
         limitOfValues: 0,
         valuesSeparator: ',',
-        debug: true
+        debug: true,
+		onItemClick: null
     }, _option);
 
     return this.each(function (id) {
         var $this = $(this),
             _this = this,
             _searchTimeout = null,
-            _selectedValues = [], 
+            _selectedValues = [],
             fid = 'flex' + id,
             $alias = null,
             $multiple = null;
@@ -281,7 +282,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                                 _this.fvalue.remove($remove);
                                 $alias.data('_remove', null);
                             } else {
-                                console.log('remove!');
+								if (options.debug) {
+									console.log('remove!');
+								}
                                 $alias.data('_remove', $alias.parents('li:eq(0)').prev());
                             }
                         } else {
@@ -654,8 +657,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     // Toggle
                     $li.click(function () {
                         _multiple.toggle($(this));
+						if(options.onItemClick) {
+							options.onItemClick(val, txt, $(this));
+						}
                     // Remove
-                    }).find('.fdl-remove').click(function () {
+                    }).find('.fdl-remove').click(function (e) {
+						e.stopPropagation();
                         _this.fvalue.remove($(this).parent());
                     });
 
