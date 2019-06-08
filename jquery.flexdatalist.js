@@ -123,6 +123,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         allowDuplicateValues: false,
         redoSearchOnFocus: true,
         requestType: 'get',
+        requestHeaders: null,
         requestContentType: 'x-www-form-urlencoded',
         resultsProperty: 'results',
         keywordParamName: 'keyword',
@@ -1123,6 +1124,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 $.ajax($.extend(
                     {
                         type: options.requestType,
+                        headers: options.requestHeaders,
                         dataType: 'json',
                         contentType: 'application/' + options.requestContentType + '; charset=UTF-8',
                         complete: function () {
