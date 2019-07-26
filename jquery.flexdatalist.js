@@ -1442,7 +1442,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             // Other text properties
                             $item = $('<span>')
                                 .addClass('item item-' + visibleProperty)
-                                .html(propertyText + ' ');
+                                .html(propertyText==null?'':propertyText + ' ');
                         }
                     }
 
