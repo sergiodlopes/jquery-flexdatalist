@@ -162,11 +162,11 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     _this.results.remove();
                 }
                 _this.action.keypressValue(event, 188);
+                _this.action.keypressValue(event, 13);
                 _this.action.backSpaceKeyRemove(event);
             })
             // Keyup
             .on('input keyup', function (event) {
-                _this.action.keypressValue(event, 13);
                 _this.action.keypressSearch(event);
                 _this.action.copyValue(event);
                 _this.action.backSpaceKeyRemove(event);
