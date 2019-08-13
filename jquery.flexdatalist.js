@@ -401,7 +401,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     })
                     .addClass('flexdatalist-alias ' + aliasid)
                     .removeClass('flexdatalist')
-                    .attr('autocomplete', 'off');
+                    .attr('autocomplete', 'nope');
                 return $alias;
             },
         /**
