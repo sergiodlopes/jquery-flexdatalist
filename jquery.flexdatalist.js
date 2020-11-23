@@ -126,6 +126,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         requestContentType: 'x-www-form-urlencoded',
         resultsProperty: 'results',
         keywordParamName: 'keyword',
+        searchContainParamName: 'contain',
         limitOfValues: 0,
         valuesSeparator: ',',
         debug: true
@@ -1043,6 +1044,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     keyword = $alias.val(),
                     options = _this.options.get(),
                     keywordParamName = options.keywordParamName,
+                    searchContainParamName = options.searchContainParamName,
                     value = _this.fvalue.get(),
                     relatives = this.relativesData();
 
@@ -1079,13 +1081,13 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     options.params,
                     {
                         load: load,
-                        contain: options.searchContain,
                         selected: value,
                         original: options.originalValue,
                         options: _opts
                     }
                 );
                 data[keywordParamName] = keyword;
+                data[searchContainParamName] = options.searchContain;
 
                 this.remote({
                     url: options.url,
