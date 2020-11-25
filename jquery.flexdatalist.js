@@ -1076,9 +1076,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     return;
                 }
 
+                var params = typeof(options.params) == 'function' ?
+                    options.params.call($this[0], keyword) :
+                    options.params;
                 var data = $.extend(
                     relatives,
-                    options.params,
+                    params,
                     {
                         load: load,
                         selected: value,
