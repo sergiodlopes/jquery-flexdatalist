@@ -665,10 +665,12 @@ jQuery.fn.flexdatalist = function (_option, _value) {
              */
                 push: function (val, index) {
                     var current = _this.fvalue.get();
-                    val = _this.fvalue.toObj(val);
-                    current.push(val);
-                    val = _this.fvalue.toStr(current);
-                    _this.value = val;
+                    if (!current.includes(val)) {
+                        val = _this.fvalue.toObj(val);
+                        current.push(val);
+                        val = _this.fvalue.toStr(current);
+                        _this.value = val;
+                    }
                 },
             /**
              * Toggle value.
