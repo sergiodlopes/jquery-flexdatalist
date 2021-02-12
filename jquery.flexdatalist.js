@@ -126,6 +126,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         requestContentType: 'x-www-form-urlencoded',
         resultsProperty: 'results',
         keywordParamName: 'keyword',
+        searchContainParamName: 'contain',
         limitOfValues: 0,
         valuesSeparator: ',',
         debug: true
