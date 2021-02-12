@@ -814,8 +814,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         if ($.isArray(valueProperty)) {
                             var _value = {};
                             for (var i = 0; i < valueProperty.length; i++) {
-                                if (_this.isDefined(item, valueProperty[i])) {
-                                    _value[valueProperty[i]] = item[valueProperty[i]];
+                                var propValue = _this.getPropertyValue(item, valueProperty[i]);
+                                if (propValue) {
+                                    _value[valueProperty[i]] = propValue;
                                 }
                             }
                             value = this.toStr(_value);
@@ -823,9 +824,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                             value = this.toStr(item);
                         }
                     } else if (_this.isDefined(item, valueProperty)) {
-                        value = item[valueProperty];
+                        value = _this.getPropertyValue(item, valueProperty);
                     } else if (_this.isDefined(item, options.searchIn[0])) {
-                        value = item[options.searchIn[0]];
+                        value = _this.getPropertyValue(item, options.searchIn[0]);
                     } else {
                         value = null;
                     }
@@ -840,9 +841,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     options = _this.options.get();
 
                 if (_this.isObject(item)) {
-                    text = item[options.searchIn[0]];
+                    text = _this.getPropertyValue(item, options.searchIn[0]);
                     if (_this.isDefined(item, options.textProperty)) {
-                        text = item[options.textProperty];
+                        text = _this.getPropertyValue(item, options.textProperty);
                     } else {
                         text = this.placeholders.replace(item, options.textProperty, text);
                     }
@@ -862,7 +863,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         if (!_this.isEmpty(item) && properties) {
                             $.each(properties, function (string, property) {
                                 if (_this.isDefined(item, property)) {
-                                    pattern = pattern.replace(string, item[property]);
+                                    pattern = pattern.replace(string, _this.getPropertyValue(item, property));
                                 }
                             });
                             return pattern;
@@ -872,14 +873,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 },
                 parse: function (pattern) {
                     var matches = pattern.match(/\{.+?\}/g);
-                    if (matches) {
-                        var properties = {};
-                        matches.map(function (string) {
-                            properties[string] = string.slice(1, -1);
-                        });
-                        return properties;
+                    if (!matches) {
+                        return false;
                     }
-                    return false;
+                    var properties = {};
+                    matches.map(function (string) {
+                        properties[string] = string.slice(1, -1);
+                    });
+                    return properties;
                 }
             },
         /**
@@ -1054,10 +1055,10 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Get remote data.
          */
             url: function (callback, load) {
-                var __this = this,
-                    keyword = $alias.val(),
+                var keyword = $alias.val(),
                     options = _this.options.get(),
                     keywordParamName = options.keywordParamName,
+                    searchContainParamName = options.searchContainParamName,
                     value = _this.fvalue.get(),
                     relatives = this.relativesData();
 
@@ -1084,23 +1085,29 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         contain: options.searchContain
                     }, options.url),
                     cache = _this.cache.read(cacheKey, true);
+
                 if (cache) {
                     callback(cache);
                     return;
                 }
 
+                var params = typeof(options.params) == 'function' ?
+                        options.params.call($this[0], keyword) :
+                        options.params;
+
                 var data = $.extend(
                     relatives,
-                    options.params,
+                    params,
                     {
                         load: load,
-                        contain: options.searchContain,
                         selected: value,
                         original: options.originalValue,
                         options: _opts
                     }
                 );
+
                 data[keywordParamName] = keyword;
+                data[searchContainParamName] = options.searchContain;
 
                 this.remote({
                     url: options.url,
@@ -1269,6 +1276,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             highlight: function (keyword, text) {
                 if (text) {
+                    // Fix by https://github.com/antunesl
+                    keyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     return text.replace(
                         new RegExp(keyword, (_this.options.get('searchContain') ? "ig" : "i")),
                         '|:|$&|::|'
@@ -1378,6 +1387,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
 
                 var $li = $ul.find('li:not(.group)');
+
                 // Listen to result's item events
                 $li.on('click', function (event) {
                     var item = $(this).data('item');
@@ -1412,6 +1422,8 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .addClass('item no-results')
                     .append(text)
                     .appendTo($container)
+
+                $this.trigger('empty:flexdatalist.results', [text]);
             },
         /**
          * Items iteration.
@@ -1831,7 +1843,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         this.isDefined = function (variable, property) {
             var _variable = (typeof variable !== 'undefined');
             if (_variable && typeof property !== 'undefined') {
-                return (typeof variable[property] !== 'undefined');
+                return (typeof this.getPropertyValue(variable, property) !== 'undefined');
             }
             return _variable;
         }
@@ -1857,8 +1869,32 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 return _default;
             }
             return typeof value === 'string' ? value.split(_this.options.get('valuesSeparator')) : value;
-        }
+        },
+    /**
+     * A function to take a string written in dot notation style, and use it to
+     * find a nested object property inside of an object.
+     *
+     * Useful in a plugin or module that accepts a JSON array of objects, but
+     * you want to let the user specify where to find various bits of data
+     * inside of each custom object instead of forcing a standardized
+     * property list.
+     *
+     * Thanks to https://github.com/sylvainblot for the PR.
+     *
+     * @param object object (optional) The object to search
+     * @param string path A dot notation style path to the value (ie "urls.small")
+     * @return the value of the property in question
+     * @see https://github.com/sergiodlopes/jquery-flexdatalist/pull/195
+     */
+        this.getPropertyValue = function (obj, path) {
+            if (!obj || typeof path !== 'string') {
+                return obj;
+            }
 
+            var parts = path.split('.');
+            while (parts.length && (obj = obj[parts.shift()]));
+            return obj;
+        }
     /**
      * Escape HTML special characters.
      *
