@@ -91,7 +91,6 @@
     display: inline-block;
     position: relative;
     margin: 5px;
-    float: left;
 }
 .flexdatalist-multiple li.input-container,
 .flexdatalist-multiple li.input-container input {
@@ -104,9 +103,9 @@
 .flexdatalist-multiple li.value {
     display: inline-block;
     padding: 2px 25px 2px 7px;
-    background: #eee;
+    background: #efefef;
     border-radius: 3px;
-    color: #777;
+    color: #444;
     line-height: 20px;
 }
 .flexdatalist-multiple li.toggle {

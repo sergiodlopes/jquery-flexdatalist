@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.2.4
+ * 2.3.0
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -211,6 +211,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 var key = _this.keyNum(event),
                     val = $alias[0].value,
                     options = _this.options.get();
+
                 if (val.length > 0
                     && key === keyCode
                     && !options.selectionRequired
@@ -281,7 +282,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                                 _this.fvalue.remove($remove);
                                 $alias.data('_remove', null);
                             } else {
-                                console.log('remove!');
                                 $alias.data('_remove', $alias.parents('li:eq(0)').prev());
                             }
                         } else {
@@ -362,7 +362,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          * Prepare input replacement.
          */
             up: function () {
-                $alias = this.alias();
+                $alias = this.getAlias();
                 if (_this.options.get('multiple')) {
                     $multiple = this.multipleInput($alias);
                 } else {
@@ -387,9 +387,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 this.chained();
             },
         /**
-         * Single value input.
+         * Create and return the alias input field for single value input.
          */
-            alias: function () {
+            getAlias: function () {
                 var aliasid = ($this.attr('id') ? $this.attr('id') + '-flexdatalist' : fid);
                 var $alias = $('<input type="text">')
                     .attr({
@@ -419,6 +419,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     .insertAfter($this).click(function () {
                         $(this).find('input').focus();
                     });
+
                 $('<li class="input-container">')
                     .addClass('flexdatalist-multiple-value')
                     .append($alias)
@@ -678,53 +679,58 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     }
                     var $li = this.findLi(val);
                     if ($li) {
-                        var index = $li.index(),
-                            data = $li.data(),
-                            action = $li.hasClass('disabled') ? 'enable' : 'disable',
-                            current = _this.fvalue.get(),
-                            args = [{value: data.value, text: data.text, action: action}, options];
-
-                        $this.trigger('before:flexdatalist.toggle', args);
-
-                        if (action === 'enable') {
-                            var value = $li.data('value');
-                            current.splice(index, 0, value);
-                            $li.removeClass('disabled');
-                        } else {
-                            current.splice(index, 1);
-                            $li.addClass('disabled');
-                        }
-
-                        current = _this.fvalue.toStr(current);
-                        _this.value = current;
-
-                        $this
-                            .trigger('after:flexdatalist.toggle', args)
-                            .trigger('change:flexdatalist', args)
-                            .trigger('change');
+                        return;
                     }
+
+                    var index = $li.index(),
+                        data = $li.data(),
+                        action = $li.hasClass('disabled') ? 'enable' : 'disable',
+                        current = _this.fvalue.get(),
+                        args = [{value: data.value, text: data.text, action: action}, options];
+
+                    $this.trigger('before:flexdatalist.toggle', args);
+
+                    if (action === 'enable') {
+                        var value = $li.data('value');
+                        current.splice(index, 0, value);
+                        $li.removeClass('disabled');
+                    } else {
+                        current.splice(index, 1);
+                        $li.addClass('disabled');
+                    }
+
+                    current = _this.fvalue.toStr(current);
+                    _this.value = current;
+
+                    $this
+                        .trigger('after:flexdatalist.toggle', args)
+                        .trigger('change:flexdatalist', args)
+                        .trigger('change');
+
                 },
             /**
              * Remove value from input.
              */
                 remove: function (val) {
                     var $li = this.findLi(val);
-                    if ($li) {
-                        var values = _this.fvalue.get(),
-                            index = $li.index(),
-                            data = $li.data(),
-                            arg = {value: data.value, text: data.text};
-
-                        values.splice(index, 1);
-                        values = _this.fvalue.toStr(values);
-                        _this.value = values;
-                        $li.remove();
-                        _this.fvalue.multiple.checkLimit();
-
-                        // For allowDuplicateValues
-                        _values.splice(index, 1);
-                        return arg;
+                    if (!$li) {
+                        return;
                     }
+
+                    var values = _this.fvalue.get(),
+                        index = $li.index(),
+                        data = $li.data(),
+                        arg = {value: data.value, text: data.text};
+
+                    values.splice(index, 1);
+                    values = _this.fvalue.toStr(values);
+                    _this.value = values;
+                    $li.remove();
+                    _this.fvalue.multiple.checkLimit();
+
+                    // For allowDuplicateValues
+                    _values.splice(index, 1);
+                    return arg;
                 },
             /**
              * Remove all.
@@ -732,10 +738,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 removeAll: function () {
                     var values = _this.fvalue.get(),
                         options = _this.options.get();
+
                     $this.trigger('before:flexdatalist.remove.all', [values, options]);
+
                     $multiple.find('li:not(.input-container)').remove();
+
                     _this.value = '';
                     _values = [];
+
                     $this.trigger('after:flexdatalist.remove.all', [values, options]);
                 },
             /**
@@ -838,7 +848,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     }
                 }
 
-                return $('<div>').html(text).text();
+                text = _this.escapeHtml(text);
+
+                return text;
             },
         /**
          * Text placeholders processing.
@@ -881,11 +893,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     this.multiple.removeAll();
                 }
                 _this.value = '';
-                if (current !== '' && !init) {
-                    $this.trigger('change:flexdatalist', [{value: '', text: ''}, options]).trigger('change');
-                }
                 if (alias) {
                     $alias[0].value = '';
+                }
+                if (current !== '' && !init) {
+                    $this
+                        .trigger('change:flexdatalist', [{value: '', text: ''}, options])
+                        .trigger('clear:flexdatalist', [{value: '', text: ''}, options])
+                        .trigger('change');
                 }
                 _values = [];
                 return this;
@@ -939,7 +954,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     } else if (typeof str !== 'string') {
                         return false;
                     }
-                    return (str.indexOf('{') === 0 || str.indexOf('[{') === 0);
+                    return (str.indexOf('{') === 0 || str.indexOf('[') === 0 || str.indexOf('[{') === 0);
                 }
                 var options = _this.options.get(),
                     prop = options.valueProperty;
@@ -1205,14 +1220,14 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 } else {
                     matches = data;
                 }
+
                 callback(matches);
             },
         /**
          * Match against searchable properties.
          */
             matches: function (item, keywords) {
-                var hasMatches = false,
-                    _item = $.extend({}, item),
+                var _item = $.extend({}, item),
                     found = [],
                     options = _this.options.get(),
                     searchIn = options.searchIn;
@@ -1223,9 +1238,11 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         if (!_this.isDefined(item, searchProperty) || !item[searchProperty]) {
                             continue;
                         }
+
                         var text = item[searchProperty].toString(),
                             highlight = text,
                             strings = this.split(text);
+
                         for (var kwindex = 0; kwindex < keywords.length; kwindex++) {
                             var keyword = keywords[kwindex];
                             if (this.find(keyword, strings)) {
@@ -1233,14 +1250,18 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                                 highlight = this.highlight(keyword, highlight);
                             }
                         }
+
                         if (highlight !== text) {
                             _item[searchProperty + '_highlight'] = this.highlight(highlight);
                         }
                     }
+
                 }
+
                 if (found.length === 0 || (options.searchByWord && found.length < (keywords.length - 1))) {
                     return false;
                 }
+
                 return _item;
             },
         /**
@@ -1301,6 +1322,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     if (typeof normalizeString === 'function') {
                         string = normalizeString(string);
                     }
+                    string = string.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     return string.toUpperCase();
                 }
                 return string;
@@ -1356,6 +1378,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
 
                 var $li = $ul.find('li:not(.group)');
+                // Listen to result's item events
                 $li.on('click', function (event) {
                     var item = $(this).data('item');
                     if (item) {
@@ -1834,6 +1857,21 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 return _default;
             }
             return typeof value === 'string' ? value.split(_this.options.get('valuesSeparator')) : value;
+        }
+
+    /**
+     * Escape HTML special characters.
+     *
+     * @param string str String to escape HTML
+     * @return string String with HTML special characters escaped
+     */
+        this.escapeHtml = function (str) {
+            return str
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
         }
 
     /**
