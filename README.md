@@ -9,7 +9,9 @@ Check out the [examples and documentation](http://projects.sergiodinislopes.pt/f
 
 ## Roadmap
 
+- Improve accessibility
 - Allow the search to be disabled on flexdatalist and just use the given list (from server-side)
+- Use CSS grid to list multiple selected values
 - Regex in JS has bad support for special and accented characters, I'll try to make some improvements __(it works since v2.3.0, but it won't highlight the word, though)__
 - Make it jQuery independent (this will take a while to make it to a release)
 

@@ -107,6 +107,7 @@
     border-radius: 3px;
     color: #444;
     line-height: 20px;
+    float: left;
 }
 .flexdatalist-multiple li.toggle {
     cursor: pointer;
