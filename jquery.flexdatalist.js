@@ -3,7 +3,7 @@
  * Autocomplete input fields, with support for datalists.
  *
  * Version:
- * 2.3.0
+ * 2.3.1
  *
  * Depends:
  * jquery.js > 1.8.3
@@ -165,10 +165,17 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 }
                 _this.action.keypressValue(event, 188);
                 _this.action.backSpaceKeyRemove(event);
+                // Ignore Enter key press if there's no results (this prevents form submission when adding custom values)
+                if (_this.keyNum(event) === 13 && $('.flexdatalist-results li').length === 0) {
+                    return false;
+                }
             })
             // Keyup
             .on('input keyup', function (event) {
-                _this.action.keypressValue(event, 13);
+                var ignoreEvent = false;
+                if (_this.action.keypressValue(event, 13)) {
+                    ignoreEvent = true;
+                }
                 _this.action.keypressSearch(event);
                 _this.action.copyValue(event);
                 _this.action.backSpaceKeyRemove(event);
@@ -176,6 +183,9 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 _this.action.clearValue(event);
                 _this.action.removeResults(event);
                 _this.action.inputWidth(event);
+                if (ignoreEvent) {
+                    return false;
+                }
             })
             // Focusout
             .on('focusout', function (event) {
@@ -218,11 +228,13 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                     && key === keyCode
                     && !options.selectionRequired
                     && options.multiple) {
-                        var val = $alias[0].value;
                         event.preventDefault();
                         event.stopPropagation();
+
+                        var val = $alias[0].value;
                         _this.fvalue.extract(val);
                         _this.results.remove();
+                        return true;
                 }
             },
         /**
@@ -684,9 +696,11 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 push: function (val, index) {
                     var current = _this.fvalue.get();
                     if (current.includes(val)) {
-                        return;
+                        return false;
                     }
+
                     val = _this.fvalue.toObj(val);
+
                     current.push(val);
                     val = _this.fvalue.toStr(current);
                     _this.value = val;
@@ -961,7 +975,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                         val = val.map(function (v) {
                             return v.trim();
                         });
-                    } else if ((this.isMixed() || this.isJSON()) && this.isJSON(val)) {
+                    } else if ((this.isMixed() || this.isJSON()) && (val.indexOf('[') === 0 || this.isJSON(val))) {
                         val = JSON.parse(val);
                     } else if (typeof val === 'number') {
                         val = val.toString();
@@ -1008,7 +1022,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
          */
             isMixed: function () {
                 var options = _this.options.get();
-                return !options.selectionRequired && options.valueProperty === '*';
+                return !options.selectionRequired && (options.valueProperty === '*' || _this.isObject(options.valueProperty));
             },
         /**
          * Is value expected to be CSV?
@@ -1881,13 +1895,6 @@ jQuery.fn.flexdatalist = function (_option, _value) {
         }
 
     /**
-     * Is variable an object.
-     */
-        this.isObject = function (value) {
-            return (value && typeof value === 'object');
-        }
-
-    /**
      * Get length of variable.
      */
         this.length = function (value) {
@@ -1908,6 +1915,13 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 return (typeof this.getPropertyValue(variable, property) !== 'undefined');
             }
             return _variable;
+        }
+
+    /**
+     * Is variable an object.
+     */
+        this.isObject = function (value) {
+            return (value && typeof value === 'object');
         }
 
     /**

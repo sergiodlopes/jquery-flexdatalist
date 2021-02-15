@@ -2,13 +2,13 @@
  * jQuery Flexdatalist basic stylesheet.
  *
  * Version:
- * 2.2.1
+ * 2.3.1
  *
  * Github:
  * https://github.com/sergiodlopes/jquery-flexdatalist/
  *
  */
-.flexdatalist-results {
+ .flexdatalist-results {
     position: absolute;
     top: 0;
     left: 0;
@@ -98,10 +98,10 @@
     height: auto;
     padding: 0 0 0 4px;
     line-height: 24px;
+    box-shadow: none;
 }
 
 .flexdatalist-multiple li.value {
-    display: inline-block;
     padding: 2px 25px 2px 7px;
     background: #efefef;
     border-radius: 3px;
