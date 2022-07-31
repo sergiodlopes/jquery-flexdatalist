@@ -313,7 +313,7 @@ jQuery.fn.flexdatalist = function (_option, _value) {
                 val = $.trim(val);
                 if (val === '' && _this.options.get('minLength') === 0) {
                     _this.data.load(function (data) {
-                        _this.results.show(data);
+                        _this.results.show(data.filter(d => !_this.isDup(d)));
                     });
                 }
             },
